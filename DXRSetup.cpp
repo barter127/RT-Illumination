@@ -245,7 +245,16 @@ void DXRSetup::LoadAssets()
 
 	DrawableGameObject* pDrawableObject = new DrawableGameObject();
 	pDrawableObject->initMesh(m_device);
+	pDrawableObject->setPosition({ 0.0f, 0.0f, 0.0 });
+	pDrawableObject->update(0);
+
+	DrawableGameObject* copiedObj = pDrawableObject->createCopy();
+	copiedObj->initPlaneMesh(m_device);
+	copiedObj->setPosition({ 0.3f, 0.3f, -5.0f });
+	copiedObj->update(0);
+
 	m_app->m_drawableObjects.push_back(pDrawableObject);
+	m_app->m_drawableObjects.push_back(copiedObj);
 
 	// Create synchronization objects and wait until assets have been uploaded to
 	// the GPU.
@@ -277,12 +286,17 @@ void DXRSetup::CreateAccelerationStructures()
 	DXRContext* context = m_app->GetContext();
 
 	// Build the bottom AS from the Triangle vertex buffer
-	AccelerationStructureBuffers bottomLevelBuffers =
+	AccelerationStructureBuffers bottomLevelTriBuffers =
 		CreateBottomLevelAS({ {m_app->m_drawableObjects[0]->getVertexBuffer().Get(), m_app->m_drawableObjects[0]->getVertexCount()} }, 
 			{ {m_app->m_drawableObjects[0]->getIndexBuffer().Get(), m_app->m_drawableObjects[0]->getIndexCount()}});
 
+	AccelerationStructureBuffers bottomLevelPlaneBuffers =
+		CreateBottomLevelAS({ {m_app->m_drawableObjects[1]->getVertexBuffer().Get(), m_app->m_drawableObjects[1]->getVertexCount()} }, 
+			{ {m_app->m_drawableObjects[1]->getIndexBuffer().Get(), m_app->m_drawableObjects[1]->getIndexCount()}});
+
 	// Just one instance for now
-	m_app->m_instances = { {bottomLevelBuffers.pResult, m_app->m_drawableObjects[0]->getTransform()} };
+	m_app->m_instances.push_back(std::make_pair(bottomLevelTriBuffers.pResult, m_app->m_drawableObjects[0]->getTransform()));
+	m_app->m_instances.push_back(std::make_pair(bottomLevelPlaneBuffers.pResult, m_app->m_drawableObjects[1]->getTransform()));
 	CreateTopLevelAS(m_app->m_instances);
 
 	// Flush the command list and wait for it to finish
@@ -302,7 +316,7 @@ void DXRSetup::CreateAccelerationStructures()
 
 	// Store the AS buffers. The rest of the buffers will be released once we exit
 	// the function
-	context->m_bottomLevelAS = bottomLevelBuffers.pResult;
+	context->m_bottomLevelAS = bottomLevelPlaneBuffers.pResult;
 }
 
 //-----------------------------------------------------------------------------
@@ -372,7 +386,7 @@ void DXRSetup::CreateRaytracingPipeline()
 	// using the [shader("xxx")] syntax
 	pipeline.AddLibrary(context->m_rayGenLibrary.Get(), { L"RayGen" });
 	pipeline.AddLibrary(context->m_missLibrary.Get(), { L"Miss" });
-	pipeline.AddLibrary(context->m_hitLibrary.Get(), { L"ClosestHit" });
+	pipeline.AddLibrary(context->m_hitLibrary.Get(), { L"ClosestHit", L"PlaneClosestHit"});
 
 	// To be used, each DX12 shader needs a root signature defining which
 	// parameters and buffers will be accessed.
@@ -398,6 +412,7 @@ void DXRSetup::CreateRaytracingPipeline()
 	// Hit group for the triangles, with a shader simply interpolating vertex
 	// colors
 	pipeline.AddHitGroup(L"HitGroup", L"ClosestHit");
+	pipeline.AddHitGroup(L"PlaneHitGroup", L"PlaneClosestHit");
 
 	// The following section associates the root signature to each shader. Note
 	// that we can explicitly show that some shaders share the same root signature
@@ -406,7 +421,7 @@ void DXRSetup::CreateRaytracingPipeline()
 	// closest-hit shaders share the same root signature.
 	pipeline.AddRootSignatureAssociation(context->m_rayGenSignature.Get(), { L"RayGen" });
 	pipeline.AddRootSignatureAssociation(context->m_missSignature.Get(), { L"Miss" });
-	pipeline.AddRootSignatureAssociation(context->m_hitSignature.Get(), { L"HitGroup" });
+	pipeline.AddRootSignatureAssociation(context->m_hitSignature.Get(), { L"HitGroup", L"PlaneHitGroup" } );
 
 	// The payload size defines the maximum size of the data carried by the rays,
 	// ie. the the data
@@ -548,6 +563,12 @@ void DXRSetup::CreateShaderBindingTable()
 			(void*)(m_app->m_drawableObjects[0]->getIndexBuffer()->GetGPUVirtualAddress())
 		});
 
+	// Adding the plane hit shader
+	context->m_sbtHelper.AddHitGroup(L"PlaneHitGroup",
+		{ (void*)(m_app->m_drawableObjects[1]->getVertexBuffer()->GetGPUVirtualAddress()), 
+			(void*)(m_app->m_drawableObjects[1]->getIndexBuffer()->GetGPUVirtualAddress())
+		});
+
 	// Compute the size of the SBT given the number of shaders and their
 	// parameters
 	uint32_t sbtSize = context->m_sbtHelper.ComputeSBTSize();
@@ -641,12 +662,19 @@ void DXRSetup::CreateTopLevelAS(
 ) {
 	DXRContext* context = m_app->GetContext();
 
-	// Gather all the instances into the builder helper
-	for (size_t i = 0; i < instances.size(); i++) {
-		context->m_topLevelASGenerator.AddInstance(instances[i].first.Get(),
-			instances[i].second, static_cast<UINT>(i),
+		context->m_topLevelASGenerator.AddInstance(instances[0].first.Get(),
+			instances[0].second, static_cast<UINT>(0),
 			static_cast<UINT>(0));
-	}
+		context->m_topLevelASGenerator.AddInstance(instances[1].first.Get(),
+			instances[1].second, static_cast<UINT>(1),
+			static_cast<UINT>(1));
+	// Gather all the instances into the builder helper
+	//for (size_t i = 0; i < instances.size(); i++) {
+	//}
+	// 
+		//context->m_topLevelASGenerator.AddInstance(instances[2].first.Get(),
+		//	instances[2].second, static_cast<UINT>(2),
+		//	static_cast<UINT>(1));
 
 	// As for the bottom-level AS, the building the AS requires some scratch space
 	// to store temporary data in addition to the actual AS. In the case of the

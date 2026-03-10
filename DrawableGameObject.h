@@ -17,6 +17,7 @@ public:
 	DrawableGameObject* createCopy(); // creates a copy 
 
 	HRESULT								initMesh(ComPtr<ID3D12Device5> device);
+	HRESULT								initPlaneMesh(ComPtr<ID3D12Device5> device);
 	void								update(float t);
 	//void								draw(ID3D11DeviceContext* pContext);
 	ComPtr<ID3D12Resource>						getVertexBuffer() { return m_vertexBuffer; }
