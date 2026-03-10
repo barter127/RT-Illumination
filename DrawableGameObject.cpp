@@ -54,9 +54,9 @@ HRESULT DrawableGameObject::initMesh(ComPtr<ID3D12Device5> device)
 	{
 		// Define the geometry for a triangle.
 		Vertex triangleVertices[] = {
-			{{0.0f, 0.25f * 1.0f, 0.0f}},
-			{{0.25f, -0.25f * 1.0f, 0.0f}},
-			{{-0.25f, -0.25f * 1.0f, 0.0f}} };
+			{{0.0f, 0.25f * 1.0f, 0.0f}, {1,0,0,1}},
+			{{0.25f, -0.25f * 1.0f, 0.0f}, {0,1,0,1}},
+			{{-0.25f, -0.25f * 1.0f, 0.0f}, {0,0,1,1}} };
 
 		m_vertexCount = 3;
 
