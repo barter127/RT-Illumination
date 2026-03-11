@@ -242,19 +242,28 @@ void DXRSetup::LoadAssets()
 		0, D3D12_COMMAND_LIST_TYPE_DIRECT, context->m_commandAllocator.Get(),
 		nullptr, IID_PPV_ARGS(&context->m_commandList)));
 
+	//DrawableGameObject* copiedObj = new DrawableGameObject();
+	//copiedObj->initPlaneMesh(m_device);
+	//copiedObj->setPosition({ 0.3f, 0.3f, -5.0f });
+	//copiedObj->update(0);
 
 	DrawableGameObject* pDrawableObject = new DrawableGameObject();
-	pDrawableObject->initMesh(m_device);
-	pDrawableObject->setPosition({ 0.0f, 0.0f, 0.0 });
+	pDrawableObject->initMeshFromPath(m_device, "Models/ball.obj");
+	pDrawableObject->setPosition({ 0.5f, 0.0f, -3.0 });
+	pDrawableObject->setScale({ 0.1f, 0.1f, 0.1 });
 	pDrawableObject->update(0);
 
-	DrawableGameObject* copiedObj = pDrawableObject->createCopy();
-	copiedObj->initPlaneMesh(m_device);
-	copiedObj->setPosition({ 0.3f, 0.3f, -5.0f });
-	copiedObj->update(0);
+	DrawableGameObject* pDrawableObject2 = new DrawableGameObject();
+	pDrawableObject2->initMeshFromPath(m_device, "Models/torusKnot.obj");
+	pDrawableObject2->setScale({ 0.1f, 0.1f, 0.1 });
+	pDrawableObject2->setPosition({ 0.0f, 0.0f, 0.0 });
+	pDrawableObject2->setEulerRotation({ 0, 90, 90 });
+	pDrawableObject2->update(0);
+
 
 	m_app->m_drawableObjects.push_back(pDrawableObject);
-	m_app->m_drawableObjects.push_back(copiedObj);
+	m_app->m_drawableObjects.push_back(pDrawableObject2);
+	//m_app->m_drawableObjects.push_back(copiedObj);
 
 	// Create synchronization objects and wait until assets have been uploaded to
 	// the GPU.

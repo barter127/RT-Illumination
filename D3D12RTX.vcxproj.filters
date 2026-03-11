@@ -62,6 +62,7 @@
     <ClCompile Include="DXRSetup.cpp" />
     <ClCompile Include="DXRContext.cpp" />
     <ClCompile Include="DXRRuntime.cpp" />
+    <ClCompile Include="OBJLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Win32Application.h" />
@@ -123,6 +124,7 @@
     <ClInclude Include="DXRSetup.h" />
     <ClInclude Include="DXRContext.h" />
     <ClInclude Include="DXRRuntime.h" />
+    <ClInclude Include="OBJLoader.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="IMGui">
