@@ -7,10 +7,15 @@
 #include "imgui_impl_dx12.h"
 #include "DrawableGameObject.h"
 
+#include "ImGuiWrapper.h"
+
+ImGuiWrapper* m_ui;
 DXRRuntime::DXRRuntime(DXRApp* app)
 {
 	m_app = app;
 	m_device = m_app->GetContext()->m_device;
+
+	m_ui = new ImGuiWrapper;
 }
 
 void DXRRuntime::Render()
@@ -23,8 +28,11 @@ void DXRRuntime::Render()
 	ImGui::NewFrame();
 	//ImGui::ShowDemoWindow(); // Show demo window
 	bool resize = true;
-	ImGui::Begin("DXR Path Tracer", &resize, ImGuiWindowFlags_AlwaysAutoResize);
+	ImGui::Begin("DXR Path Tracer", &resize);
 	ImGui::Text("ImGUI version: (%s)", IMGUI_VERSION);
+
+	XMFLOAT3 vec = { 0,0,0 };
+	m_ui->DrawVec3Control("Position", vec, 75.0f, 50.0f, 0);
 	ImGui::End();
 
 	// Record all the commands we need to render the scene into the command list.
