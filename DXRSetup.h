@@ -3,6 +3,8 @@
 #include "DXRApp.h"
 #include "common.h"
 
+class DXRRuntime;
+
 class DXRSetup
 {
 private:
@@ -30,7 +32,7 @@ private:
 
 	/// Create the main acceleration structure that holds all instances of the scene
 	/// \param     instances : pair of BLAS and transform
-	void CreateTopLevelAS(const std::vector<std::pair<ComPtr<ID3D12Resource>, DirectX::XMMATRIX>>& instances);
+	void CreateTopLevelAS(const std::vector<std::pair<ComPtr<ID3D12Resource>, DirectX::XMMATRIX>>& instances, bool updateDirtyFlag);
 
 	/// Create the acceleration structure of an instance
 	///
@@ -54,6 +56,8 @@ private:
 	void CreateShaderResourceHeap();
 
 	void CreateShaderBindingTable();
+
+	friend DXRRuntime;
 
 };
 

@@ -131,6 +131,8 @@ public:
                                                /// if an iterative update is requested
   );
 
+  void RemoveAllInstances() { m_instances.clear(); }
+
 private:
   /// Helper struct storing the instance data
   struct Instance

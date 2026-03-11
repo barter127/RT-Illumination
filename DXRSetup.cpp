@@ -248,16 +248,16 @@ void DXRSetup::LoadAssets()
 	//copiedObj->update(0);
 
 	DrawableGameObject* pDrawableObject = new DrawableGameObject();
-	pDrawableObject->initMeshFromPath(m_device, "Models/ball.obj");
+	pDrawableObject->initMeshFromPath(m_device, "Models/torusKnot.obj");
 	pDrawableObject->setPosition({ 0.5f, 0.0f, -3.0 });
 	pDrawableObject->setScale({ 0.1f, 0.1f, 0.1 });
 	pDrawableObject->update(0);
 
 	DrawableGameObject* pDrawableObject2 = new DrawableGameObject();
-	pDrawableObject2->initMeshFromPath(m_device, "Models/torusKnot.obj");
+	pDrawableObject2->initMeshFromPath(m_device, "Models/donut.obj");
 	pDrawableObject2->setScale({ 0.1f, 0.1f, 0.1 });
 	pDrawableObject2->setPosition({ 0.0f, 0.0f, 0.0 });
-	pDrawableObject2->setEulerRotation({ 0, 90, 90 });
+	pDrawableObject2->setEulerRotation({ 0, 0, 0 });
 	pDrawableObject2->update(0);
 
 
@@ -306,7 +306,7 @@ void DXRSetup::CreateAccelerationStructures()
 	// Just one instance for now
 	m_app->m_instances.push_back(std::make_pair(bottomLevelTriBuffers.pResult, m_app->m_drawableObjects[0]->getTransform()));
 	m_app->m_instances.push_back(std::make_pair(bottomLevelPlaneBuffers.pResult, m_app->m_drawableObjects[1]->getTransform()));
-	CreateTopLevelAS(m_app->m_instances);
+	CreateTopLevelAS(m_app->m_instances, false);
 
 	// Flush the command list and wait for it to finish
 	context->m_commandList->Close();
@@ -667,9 +667,17 @@ AccelerationStructureBuffers DXRSetup::CreateBottomLevelAS(std::vector<std::pair
 //
 void DXRSetup::CreateTopLevelAS(
 	const std::vector<std::pair<ComPtr<ID3D12Resource>, DirectX::XMMATRIX>>
-	& instances // pair of bottom level AS and matrix of the instance
-) {
+	& instances, // pair of bottom level AS and matrix of the instance
+	bool updateDirtyFlag
+) 
+{
+
 	DXRContext* context = m_app->GetContext();
+
+	if (updateDirtyFlag)
+	{
+		context->m_topLevelASGenerator.RemoveAllInstances();
+	}
 
 		context->m_topLevelASGenerator.AddInstance(instances[0].first.Get(),
 			instances[0].second, static_cast<UINT>(0),
@@ -677,42 +685,49 @@ void DXRSetup::CreateTopLevelAS(
 		context->m_topLevelASGenerator.AddInstance(instances[1].first.Get(),
 			instances[1].second, static_cast<UINT>(1),
 			static_cast<UINT>(1));
-	// Gather all the instances into the builder helper
-	//for (size_t i = 0; i < instances.size(); i++) {
-	//}
-	// 
-		//context->m_topLevelASGenerator.AddInstance(instances[2].first.Get(),
-		//	instances[2].second, static_cast<UINT>(2),
-		//	static_cast<UINT>(1));
 
-	// As for the bottom-level AS, the building the AS requires some scratch space
-	// to store temporary data in addition to the actual AS. In the case of the
-	// top-level AS, the instance descriptors also need to be stored in GPU
-	// memory. This call outputs the memory requirements for each (scratch,
-	// results, instance descriptors) so that the application can allocate the
-	// corresponding memory
-	UINT64 scratchSize, resultSize, instanceDescsSize;
 
-	context->m_topLevelASGenerator.ComputeASBufferSizes(m_device.Get(), true, &scratchSize,
-		&resultSize, &instanceDescsSize);
+	
+	if (!updateDirtyFlag)
+	{
+		// Gather all the instances into the builder helper
+		//for (size_t i = 0; i < instances.size(); i++) {
+		//}
+		// 
+			//context->m_topLevelASGenerator.AddInstance(instances[2].first.Get(),
+			//	instances[2].second, static_cast<UINT>(2),
+			//	static_cast<UINT>(1));
 
-	// Create the scratch and result buffers. Since the build is all done on GPU,
-	// those can be allocated on the default heap
-	context->m_topLevelASBuffers.pScratch = nv_helpers_dx12::CreateBuffer(
-		m_device.Get(), scratchSize, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
-		D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-		nv_helpers_dx12::kDefaultHeapProps);
-	context->m_topLevelASBuffers.pResult = nv_helpers_dx12::CreateBuffer(
-		m_device.Get(), resultSize, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
-		D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
-		nv_helpers_dx12::kDefaultHeapProps);
+		// As for the bottom-level AS, the building the AS requires some scratch space
+		// to store temporary data in addition to the actual AS. In the case of the
+		// top-level AS, the instance descriptors also need to be stored in GPU
+		// memory. This call outputs the memory requirements for each (scratch,
+		// results, instance descriptors) so that the application can allocate the
+		// corresponding memory
+		UINT64 scratchSize, resultSize, instanceDescsSize;
 
-	// The buffer describing the instances: ID, shader binding information,
-	// matrices ... Those will be copied into the buffer by the helper through
-	// mapping, so the buffer has to be allocated on the upload heap.
-	context->m_topLevelASBuffers.pInstanceDesc = nv_helpers_dx12::CreateBuffer(
-		m_device.Get(), instanceDescsSize, D3D12_RESOURCE_FLAG_NONE,
-		D3D12_RESOURCE_STATE_GENERIC_READ, nv_helpers_dx12::kUploadHeapProps);
+		context->m_topLevelASGenerator.ComputeASBufferSizes(m_device.Get(), true, &scratchSize,
+			&resultSize, &instanceDescsSize);
+
+		// Create the scratch and result buffers. Since the build is all done on GPU,
+		// those can be allocated on the default heap
+		context->m_topLevelASBuffers.pScratch = nv_helpers_dx12::CreateBuffer(
+			m_device.Get(), scratchSize, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
+			D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+			nv_helpers_dx12::kDefaultHeapProps);
+		context->m_topLevelASBuffers.pResult = nv_helpers_dx12::CreateBuffer(
+			m_device.Get(), resultSize, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
+			D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
+			nv_helpers_dx12::kDefaultHeapProps);
+
+		// The buffer describing the instances: ID, shader binding information,
+		// matrices ... Those will be copied into the buffer by the helper through
+		// mapping, so the buffer has to be allocated on the upload heap.
+		context->m_topLevelASBuffers.pInstanceDesc = nv_helpers_dx12::CreateBuffer(
+			m_device.Get(), instanceDescsSize, D3D12_RESOURCE_FLAG_NONE,
+			D3D12_RESOURCE_STATE_GENERIC_READ, nv_helpers_dx12::kUploadHeapProps);
+	}
+
 
 	// After all the buffers are allocated, or if only an update is required, we
 	// can build the acceleration structure. Note that in the case of the update
