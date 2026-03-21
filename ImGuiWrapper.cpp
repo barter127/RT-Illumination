@@ -12,9 +12,9 @@ void ImGuiWrapper::TransformPanel(DrawableGameObject& object)
 
 	int index = 0;
 
-	DrawVec3Control("Position", object.m_position, 75.0f, 50.0f, 0);
-	DrawVec3Control("Rotation", object.m_eulerRotation, 75.0f, 50.0f, 0);
-	DrawVec3Control("Scale", object.m_scale, 75.0f, 50.0f, 1);
+	DrawVec3Control("Position", object.m_position, 75.0f, 60.0f, 0);
+	DrawVec3Control("Rotation", object.m_eulerRotation, 75.0f, 60.0f, 0);
+	DrawVec3Control("Scale", object.m_scale, 75.0f, 60.0f, 1);
 
 	ImGui::End();
 }
@@ -31,7 +31,7 @@ void ImGuiWrapper::DrawVec3Control(string displayString, XMFLOAT3& vector, int b
 		// Program can crash if table is not verified.
 		if (!tableCreated) return;
 
-		ImGui::TableSetupColumn("Left", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, columnWidth);
+		ImGui::TableSetupColumn("Left", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 60);
 		ImGui::TableSetupColumn("Right", ImGuiTableColumnFlags_None);
 
 		ImGui::TableNextRow();
