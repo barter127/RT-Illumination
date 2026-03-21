@@ -6,7 +6,20 @@
 using namespace DirectX;
 using namespace std;
 
-void ImGuiWrapper::DrawVec3Control(string displayString, XMFLOAT3 vector, int barWidth, int columnWidth, int resetTo)
+void ImGuiWrapper::TransformPanel(DrawableGameObject& object)
+{
+	ImGui::Begin("Transform");
+
+	int index = 0;
+
+	DrawVec3Control("Position", object.m_position, 75.0f, 50.0f, 0);
+	DrawVec3Control("Rotation", object.m_eulerRotation, 75.0f, 50.0f, 0);
+	DrawVec3Control("Scale", object.m_scale, 75.0f, 50.0f, 1);
+
+	ImGui::End();
+}
+
+void ImGuiWrapper::DrawVec3Control(string displayString, XMFLOAT3& vector, int barWidth, int columnWidth, int resetTo)
 {
 	static int index = 0;
 

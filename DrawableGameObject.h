@@ -2,6 +2,7 @@
 
 #include "common.h"
 #include "OBJLoader.h"
+#include "ImGuiWrapper.h"
 
 using Microsoft::WRL::ComPtr;
 
@@ -28,6 +29,7 @@ public:
 	//ID3D11SamplerState**				getTextureSamplerState() { return &m_pSamplerLinear; }
 	//ID3D11Buffer*						getMaterialConstantBuffer() { return m_pMaterialConstantBuffer;}
 	void								setPosition(XMFLOAT3 position);
+	XMFLOAT3							GetPosition() { return m_position; }
 	void								setEulerRotation(XMFLOAT3 euler);
 	void								setScale(XMFLOAT3 scale);
 	unsigned int						getVertexCount() { return m_meshData.VertexCount; }
@@ -46,5 +48,8 @@ private:
 	XMFLOAT3							m_position;
 	XMFLOAT3							m_eulerRotation;
 	XMFLOAT3							m_scale;
+
+public:
+	friend class ImGuiWrapper;
 };
 

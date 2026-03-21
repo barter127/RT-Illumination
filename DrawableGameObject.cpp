@@ -16,6 +16,8 @@ DrawableGameObject::DrawableGameObject()
 	// Initialize the world matrix
 	XMStoreFloat4x4(&m_World, XMMatrixIdentity());
 	m_position = XMFLOAT3(0, 0, 0);
+	m_eulerRotation = XMFLOAT3(0, 0, 0);
+	m_scale = XMFLOAT3(0, 0, 0);
 }
 
 

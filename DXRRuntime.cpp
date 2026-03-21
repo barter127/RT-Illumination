@@ -31,8 +31,8 @@ void DXRRuntime::Render()
 	ImGui::Begin("DXR Path Tracer", &resize);
 	ImGui::Text("ImGUI version: (%s)", IMGUI_VERSION);
 
-	XMFLOAT3 vec = { 0,0,0 };
-	m_ui->DrawVec3Control("Position", vec, 75.0f, 50.0f, 0);
+	m_ui->TransformPanel(*m_app->m_drawableObjects[0]);
+
 	ImGui::End();
 
 	// Record all the commands we need to render the scene into the command list.

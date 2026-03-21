@@ -249,7 +249,7 @@ void DXRSetup::LoadAssets()
 
 	DrawableGameObject* pDrawableObject = new DrawableGameObject();
 	pDrawableObject->initMeshFromPath(m_device, "Models/torusKnot.obj");
-	pDrawableObject->setPosition({ 0.5f, 0.0f, -3.0 });
+	//pDrawableObject->setPosition({ 0.5f, 0.0f, -3.0 });
 	pDrawableObject->setScale({ 0.1f, 0.1f, 0.1 });
 	pDrawableObject->update(0);
 
