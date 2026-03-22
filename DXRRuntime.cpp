@@ -51,7 +51,17 @@ void DXRRuntime::Render()
 
 void DXRRuntime::Update()
 {
-	m_app->m_DXRContext->m_camera.get()->UpdateCameraMovement(0.016f);
+	//Static initializes this value only once    
+	static ULONGLONG frameStart = GetTickCount64();
+
+	ULONGLONG frameNow = GetTickCount64();
+	float deltaTime = (frameNow - frameStart) / 1000.0f;
+	frameStart = frameNow;
+
+	static float simpleCount = 0.0f;
+	simpleCount += deltaTime;
+
+	m_app->m_DXRContext->m_camera.get()->UpdateCameraMovement(deltaTime);
 	m_app->m_DXSetup->UpdateCameraBuffer();
 
 	int i = 0;
