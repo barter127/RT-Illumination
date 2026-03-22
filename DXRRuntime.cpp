@@ -51,6 +51,7 @@ void DXRRuntime::Render()
 
 void DXRRuntime::Update()
 {
+	m_app->m_DXRContext->m_camera.get()->UpdateCameraMovement(0.016f);
 	m_app->m_DXSetup->UpdateCameraBuffer();
 
 	int i = 0;
@@ -68,27 +69,42 @@ void DXRRuntime::OnKeyDown(UINT8 key)
 
 	if (key == 'W')
 	{
-		context->m_camera.get()->MoveForward(1);
+		context->m_camera.get()->m_isMovingForward = true;
 	}
 	if (key == 'S')
 	{
-		context->m_camera.get()->MoveBackward(1);
+		context->m_camera.get()->m_isMovingBack = true;
 	}
 	if (key == 'D')
 	{
-		context->m_camera.get()->StrafeRight(1);
+		context->m_camera.get()->m_isMovingRight = true;
 	}
 	if (key == 'A')
 	{
-		context->m_camera.get()->StrafeLeft(1);
+		context->m_camera.get()->m_isMovingLeft = true;
 	}
 }
 
 
 void DXRRuntime::OnKeyUp(UINT8 key)
 {
-	// e.g.
-	if (key == VK_SPACE) {
+	DXRContext* context = m_app->m_DXRContext;
+
+	if (key == 'W')
+	{
+		context->m_camera.get()->m_isMovingForward = false;
+	}
+	if (key == 'S')
+	{
+		context->m_camera.get()->m_isMovingBack = false;
+	}
+	if (key == 'D')
+	{
+		context->m_camera.get()->m_isMovingRight = false;
+	}
+	if (key == 'A')
+	{
+		context->m_camera.get()->m_isMovingLeft = false;
 	}
 }
 
