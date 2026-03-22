@@ -16,6 +16,12 @@ public:
 	
 	void Render();
 	void Update();
+
+	// === Input ===
+	void OnKeyDown(UINT8 key);
 	void OnKeyUp(UINT8 key);
+
+	void OnMouseMoveDelta(float dx, float dy);
+	void OnMouseMove(float x, float y);
 };
 

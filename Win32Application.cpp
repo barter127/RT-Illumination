@@ -12,6 +12,7 @@
 #include "stdafx.h"
 
 #include "Win32Application.h"
+#include "DXRApp.h"
 
 HWND Win32Application::m_hwnd = nullptr;
 
@@ -76,50 +77,92 @@ int Win32Application::Run(DXSample *pSample, HINSTANCE hInstance,
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 // Main message handler for the sample.
-LRESULT CALLBACK Win32Application::WindowProc(HWND hWnd, UINT message,
-                                              WPARAM wParam, LPARAM lParam) {
-
+LRESULT CALLBACK Win32Application::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
     if (ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam))
         return true;
 
-  DXSample *pSample =
-      reinterpret_cast<DXSample *>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    DXRApp* pSample = reinterpret_cast<DXRApp*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 
-  switch (message) {
-  case WM_CREATE: {
-    // Save the DXSample* passed in to CreateWindow.
-    LPCREATESTRUCT pCreateStruct = reinterpret_cast<LPCREATESTRUCT>(lParam);
-    SetWindowLongPtr(hWnd, GWLP_USERDATA,
-                     reinterpret_cast<LONG_PTR>(pCreateStruct->lpCreateParams));
-  }
-    return 0;
+    switch (message)
+    {
+        case WM_CREATE: {
+            // Save the DXSample* passed in to CreateWindow.
+            LPCREATESTRUCT pCreateStruct = reinterpret_cast<LPCREATESTRUCT>(lParam);
+            SetWindowLongPtr(hWnd, GWLP_USERDATA,
+                reinterpret_cast<LONG_PTR>(pCreateStruct->lpCreateParams));
+        }
+                      return 0;
 
-  case WM_KEYDOWN:
-    if (pSample) {
-      pSample->OnKeyDown(static_cast<UINT8>(wParam));
+        case WM_KEYDOWN:
+            if (pSample) {
+                pSample->OnKeyDown(static_cast<UINT8>(wParam));
+            }
+            if (static_cast<UINT8>(wParam) == VK_ESCAPE)
+                PostQuitMessage(0);
+            return 0;
+
+        case WM_KEYUP:
+            if (pSample) {
+                pSample->OnKeyUp(static_cast<UINT8>(wParam));
+            }
+            return 0;
+
+        case WM_PAINT:
+            if (pSample) {
+                pSample->OnUpdate();
+                pSample->OnRender();
+            }
+            return 0;
+
+        case WM_DESTROY:
+            PostQuitMessage(0);
+            return 0;
+
+        case WM_RBUTTONDOWN:
+            pSample->m_rMouseDown = true;
+            break;
+
+        case WM_RBUTTONUP:
+            pSample->m_rMouseDown = false;
+            break;
+
+        case WM_LBUTTONDOWN:
+            pSample->m_rMouseDown = true;
+            break;
+
+        case WM_LBUTTONUP:
+            pSample->m_rMouseDown = false;
+            break;
+
+        case WM_MOUSEMOVE:
+        {
+            // Get the dimensions of the window
+            RECT rect;
+            GetClientRect(hWnd, &rect);
+            // Calculate the center position of the window
+            POINT windowCenter;
+            windowCenter.x = (rect.right - rect.left) / 2;
+            windowCenter.y = (rect.bottom - rect.top) / 2;
+            // Convert the client area point to screen coordinates
+            ClientToScreen(hWnd, &windowCenter);
+            // Get the current cursor position
+            POINTS mousePos = MAKEPOINTS(lParam);
+            POINT cursorPos = { mousePos.x, mousePos.y };
+            ClientToScreen(hWnd, &cursorPos);
+            // Calculate the delta from the window center
+            POINT delta;
+            delta.x = cursorPos.x - windowCenter.x;
+            delta.y = cursorPos.y - windowCenter.y;
+            pSample->OnMouseMoveDelta(delta.x, delta.y);
+            pSample->OnMouseMove(cursorPos.x, cursorPos.y);
+
+            pSample->m_windowCentre = windowCenter;
+
+            break;
+        }
     }
-    if (static_cast<UINT8>(wParam) == VK_ESCAPE)
-      PostQuitMessage(0);
-    return 0;
 
-  case WM_KEYUP:
-    if (pSample) {
-      pSample->OnKeyUp(static_cast<UINT8>(wParam));
-    }
-    return 0;
-
-  case WM_PAINT:
-    if (pSample) {
-      pSample->OnUpdate();
-      pSample->OnRender();
-    }
-    return 0;
-
-  case WM_DESTROY:
-    PostQuitMessage(0);
-    return 0;
-  }
-
-  // Handle any messages the switch statement didn't.
-  return DefWindowProc(hWnd, message, wParam, lParam);
+    // Handle any messages the switch statement didn't.
+    return DefWindowProc(hWnd, message, wParam, lParam);
 }

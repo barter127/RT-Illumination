@@ -8,6 +8,7 @@
 #include "DrawableGameObject.h"
 
 #include "ImGuiWrapper.h"
+#include "Camera.h"
 
 ImGuiWrapper* m_ui;
 DXRRuntime::DXRRuntime(DXRApp* app)
@@ -50,6 +51,8 @@ void DXRRuntime::Render()
 
 void DXRRuntime::Update()
 {
+	m_app->m_DXSetup->UpdateCameraBuffer();
+
 	int i = 0;
 	for (DrawableGameObject* dgo : m_app->m_drawableObjects)
 	{
@@ -59,11 +62,67 @@ void DXRRuntime::Update()
 	}
 }
 
+void DXRRuntime::OnKeyDown(UINT8 key)
+{
+	DXRContext* context = m_app->m_DXRContext;
+
+	if (key == 'W')
+	{
+		context->m_camera.get()->MoveForward(1);
+	}
+	if (key == 'S')
+	{
+		context->m_camera.get()->MoveBackward(1);
+	}
+	if (key == 'D')
+	{
+		context->m_camera.get()->StrafeRight(1);
+	}
+	if (key == 'A')
+	{
+		context->m_camera.get()->StrafeLeft(1);
+	}
+}
+
+
 void DXRRuntime::OnKeyUp(UINT8 key)
 {
 	// e.g.
 	if (key == VK_SPACE) {
 	}
+}
+
+void DXRRuntime::OnMouseMoveDelta(float dx, float dy)
+{
+	DXRContext* context = m_app->m_DXRContext;
+
+	if (m_app->m_rMouseDown)
+	{
+		POINTS point = { -dx, -dy };
+		context->m_camera.get()->UpdateLookAt(point);
+
+		// Recenter the cursor
+		SetCursorPos(m_app->m_windowCentre.x, m_app->m_windowCentre.y);
+	}
+	else
+	{
+		ShowCursor(true);
+	}
+
+	// Win32 fucking sucks holy shit.
+	if (m_app->m_rMouseDown)
+	{
+		while (ShowCursor(FALSE) >= 0) {}
+	}
+	else
+	{
+		while (ShowCursor(TRUE) < 0) {}
+	}
+}
+
+void DXRRuntime::OnMouseMove(float x, float y)
+{
+	DXRContext* context = m_app->m_DXRContext;
 }
 
 void DXRRuntime::PopulateCommandList() {

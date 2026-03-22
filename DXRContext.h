@@ -5,12 +5,21 @@
 #include "nv_helpers_dx12/TopLevelASGenerator.h"
 #include "nv_helpers_dx12/ShaderBindingTableGenerator.h"
 #include "common.h"
+#include <memory>
+
+class Camera;
 
 class DXRContext
 {
 	public: 
 
 	DXRContext(UINT width, UINT height);
+
+
+	// === Camera ===
+	std::unique_ptr<Camera> m_camera;
+	ComPtr<ID3D12Resource> m_cameraBuffer;
+	uint32_t m_cameraBufferSize = 0;
 
 	ComPtr<ID3D12DescriptorHeap> m_IMGUIDescHeap;
 

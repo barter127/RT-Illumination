@@ -51,19 +51,29 @@ public:
 	virtual void OnRender();
 	virtual void OnDestroy();
 	DXRContext* GetContext() { return m_DXRContext; }
+
+	// === Input ===
+	virtual void OnKeyDown(UINT8 key);
+	virtual void OnKeyUp(UINT8 key);
 	
+	virtual void OnMouseMoveDelta(float dx, float dy);
+	virtual void OnMouseMove(float x, float y);
 
 private:
 	DXRContext* m_DXRContext;
 	DXRRuntime* m_DXRuntime;
 	DXRSetup* m_DXSetup;
-
 	
-	virtual void OnKeyUp(UINT8 key);
 	void WaitForPreviousFrame();
 
-	
 	std::vector<std::pair<ComPtr<ID3D12Resource>, DirectX::XMMATRIX>> m_instances;
 
 	vecDrawables m_drawableObjects;
+
+	static bool m_rMouseDown;
+	static bool m_lMouseDown;
+
+	static POINT m_windowCentre;
+
+	friend class Win32Application;
 };

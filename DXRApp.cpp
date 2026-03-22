@@ -19,6 +19,11 @@
 
 #include "DrawableGameObject.h"
 
+bool DXRApp::m_rMouseDown = false;
+bool DXRApp::m_lMouseDown = false;
+
+POINT DXRApp::m_windowCentre = { 0,0 };
+
 DXRApp::DXRApp(UINT width, UINT height,
 	std::wstring name)
 	: DXSample(width, height, name)
@@ -55,7 +60,26 @@ void DXRApp::OnDestroy() {
 	CloseHandle(m_DXRContext->m_fenceEvent);
 }
 
+void DXRApp::OnKeyDown(UINT8 key)
+{
+	m_DXRuntime->OnKeyDown(key);
+}
 
+void DXRApp::OnKeyUp(UINT8 key) {
+
+	m_DXRuntime->OnKeyUp(key);
+
+}
+
+void DXRApp::OnMouseMoveDelta(float dx, float dy)
+{
+	m_DXRuntime->OnMouseMoveDelta(dx, dy);
+}
+
+void DXRApp::OnMouseMove(float x, float y)
+{
+	m_DXRuntime->OnMouseMove(x, y);
+}
 
 void DXRApp::WaitForPreviousFrame() {
 	// WAITING FOR THE FRAME TO COMPLETE BEFORE CONTINUING IS NOT BEST PRACTICE.
@@ -75,18 +99,4 @@ void DXRApp::WaitForPreviousFrame() {
 	}
 
 	m_DXRContext->m_frameIndex = m_DXRContext->m_swapChain->GetCurrentBackBufferIndex();
-}
-
-
-
-//-----------------------------------------------------------------------------
-//
-void DXRApp::OnKeyUp(UINT8 key) {
-
-	m_DXRuntime->OnKeyUp(key);
-
-}
-
-
-
-
+} 

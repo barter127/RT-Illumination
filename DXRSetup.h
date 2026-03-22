@@ -57,6 +57,9 @@ private:
 
 	void CreateShaderBindingTable();
 
+	void CreateCamera(XMFLOAT3 eye, XMFLOAT3 lookAt, XMFLOAT3 up);
+	void UpdateCameraBuffer();
+
 	friend DXRRuntime;
 
 };

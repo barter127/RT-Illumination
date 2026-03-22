@@ -127,6 +127,7 @@
     <ClInclude Include="DXRRuntime.h" />
     <ClInclude Include="OBJLoader.h" />
     <ClInclude Include="ImGuiWrapper.h" />
+    <ClInclude Include="Camera.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="IMGui">
