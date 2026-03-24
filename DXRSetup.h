@@ -60,6 +60,8 @@ private:
 	void CreateCamera(XMFLOAT3 eye, XMFLOAT3 lookAt, XMFLOAT3 up);
 	void UpdateCameraBuffer();
 
+	void CreateLightBuffer();
+
 	friend DXRRuntime;
 
 };

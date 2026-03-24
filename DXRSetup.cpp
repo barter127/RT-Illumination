@@ -53,6 +53,7 @@ void DXRSetup::initialise()
 	constexpr XMFLOAT3 camStartLookAt = { 0,0,1 };
 	constexpr XMFLOAT3 camStartUp = { 0,1,0 };
 	CreateCamera(camStartPos, camStartLookAt, camStartUp);
+	CreateLightBuffer();
 
 	// Create the buffer containing the raytracing result (always output in a
 	// UAV), and create the heap referencing the resources used by the raytracing,
@@ -363,6 +364,7 @@ ComPtr<ID3D12RootSignature> DXRSetup::CreateHitSignature() {
 	nv_helpers_dx12::RootSignatureGenerator rsc;
 	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_SRV, 0 /*t0*/); // vertex data
 	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_SRV, 1 /*t1*/); // indices
+	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_CBV, 0 /*b0*/); // Lighting
 	return rsc.Generate(m_device.Get(), true);
 }
 
@@ -588,14 +590,16 @@ void DXRSetup::CreateShaderBindingTable()
 
 	// Adding the triangle hit shader
 	context->m_sbtHelper.AddHitGroup(L"HitGroup",
-		{ (void*)(m_app->m_drawableObjects[0]->getVertexBuffer()->GetGPUVirtualAddress()), 
-			(void*)(m_app->m_drawableObjects[0]->getIndexBuffer()->GetGPUVirtualAddress())
+		{ (void*)(m_app->m_drawableObjects[0]->getVertexBuffer()->GetGPUVirtualAddress()),
+			(void*)(m_app->m_drawableObjects[0]->getIndexBuffer()->GetGPUVirtualAddress()),
+			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress())
 		});
 
 	// Adding the plane hit shader
 	context->m_sbtHelper.AddHitGroup(L"PlaneHitGroup",
-		{ (void*)(m_app->m_drawableObjects[1]->getVertexBuffer()->GetGPUVirtualAddress()), 
-			(void*)(m_app->m_drawableObjects[1]->getIndexBuffer()->GetGPUVirtualAddress())
+		{ (void*)(m_app->m_drawableObjects[1]->getVertexBuffer()->GetGPUVirtualAddress()),
+			(void*)(m_app->m_drawableObjects[1]->getIndexBuffer()->GetGPUVirtualAddress()),
+			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress())
 		});
 
 	// Compute the size of the SBT given the number of shaders and their
@@ -646,6 +650,30 @@ void DXRSetup::UpdateCameraBuffer()
 	uint8_t* pData;
 	ThrowIfFailed(context->m_cameraBuffer->Map(0, nullptr, (void**)&pData));
 	memcpy(pData, matrices.data(), context->m_cameraBufferSize);
+	context->m_cameraBuffer->Unmap(0, nullptr);
+}
+
+void DXRSetup::CreateLightBuffer()
+{
+	DXRContext* context = m_app->GetContext();
+
+	context->m_lightBufferSize = 256;
+	context->m_lightBuffer = nv_helpers_dx12::CreateBuffer(m_device.Get(),
+		context->m_lightBufferSize,
+		D3D12_RESOURCE_FLAG_NONE,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nv_helpers_dx12::kUploadHeapProps);
+
+	LightBuffer lb = { 
+		{0,0,0,0}, 
+		{1,0,0,1}, 
+		{0.1,0.1,0.1,1}, 
+		{1,1,1,1} };
+
+	// Copy data to cb.
+	uint8_t* pData;
+	ThrowIfFailed(context->m_lightBuffer->Map(0, nullptr, (void**)&pData));
+	memcpy(pData, &lb, context->m_lightBufferSize);
 	context->m_cameraBuffer->Unmap(0, nullptr);
 }
 

@@ -21,6 +21,10 @@ class DXRContext
 	ComPtr<ID3D12Resource> m_cameraBuffer;
 	uint32_t m_cameraBufferSize = 0;
 
+	// === Lighting ===
+	ComPtr<ID3D12Resource> m_lightBuffer;
+	uint32_t m_lightBufferSize;
+
 	ComPtr<ID3D12DescriptorHeap> m_IMGUIDescHeap;
 
 	// Pipeline objects.

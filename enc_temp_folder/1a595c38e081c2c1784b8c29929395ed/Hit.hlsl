@@ -42,8 +42,8 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     vertexNormals[1] = BTriVertex[indices[vertID + 1]].normal.xyz;
     vertexNormals[2] = BTriVertex[indices[vertID + 2]].normal.xyz;
     
-    float3 triNormal = HitAttributeFloat3(vertexNormals, attrib);
-    float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
+    float3 hitNormal = HitAttributeFloat3(vertexNormals, attrib);
+    float3 worldNormal = normalize(mul(hitNormal, (float3x3) ObjectToWorld4x3()));
     
     float3 lightDir = normalize((float3) lightPosition - WorldRayOrigin());
     
@@ -65,8 +65,8 @@ void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
     vertexNormals[1] = BTriVertex[indices[vertID + 1]].normal.xyz;
     vertexNormals[2] = BTriVertex[indices[vertID + 2]].normal.xyz;
     
-    float3 triNormal = HitAttributeFloat3(vertexNormals, attrib);
-    float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
+    float3 hitNormal = HitAttributeFloat3(vertexNormals, attrib);
+    float3 worldNormal = normalize(mul(hitNormal, (float3x3) ObjectToWorld4x3()));
     
     float diff = max(dot(worldNormal, WorldRayDirection()), 0.0f);
     float4 diffuseCalc = diff * lightDiffuseColour;

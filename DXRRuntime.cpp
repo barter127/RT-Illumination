@@ -67,7 +67,7 @@ void DXRRuntime::Update()
 	int i = 0;
 	for (DrawableGameObject* dgo : m_app->m_drawableObjects)
 	{
-		dgo->update(0.16f);
+		dgo->update(deltaTime);
 		m_app->m_instances[i].second = dgo->getTransform();
 		i++;
 	}

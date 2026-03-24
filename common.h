@@ -20,3 +20,11 @@ struct AccelerationStructureBuffers {
 	ComPtr<ID3D12Resource> pResult;       // Where the AS is
 	ComPtr<ID3D12Resource> pInstanceDesc; // Hold the matrices of the instances
 };
+
+struct LightBuffer
+{
+	XMFLOAT4 position;
+	XMFLOAT4 ambientColour;
+	XMFLOAT4 diffuseColour;
+	XMFLOAT4 specularColour;
+};
