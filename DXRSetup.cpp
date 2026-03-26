@@ -667,7 +667,7 @@ void DXRSetup::CreateLightBuffer()
 	LightBuffer lb = { 
 		{0,0,0,0}, 
 		{1,0,0,1}, 
-		{0.1,0.1,0.1,1}, 
+		{0.1,1,0.1,1}, 
 		{1,1,1,1} };
 
 	// Copy data to cb.

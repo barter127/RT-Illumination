@@ -45,11 +45,16 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     float3 triNormal = HitAttributeFloat3(vertexNormals, attrib);
     float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
     
-    float3 lightDir = normalize((float3) lightPosition - WorldRayOrigin());
+    float3 lightDir = float3(0, 1, 0);
+    float3 viewDir = WorldRayOrigin();
     
-    float diff = max(dot(worldNormal, lightDir), 0.0f);
+    float diff = saturate(dot(worldNormal, lightDir));
     float4 diffuseCalc = diff * lightDiffuseColour;
-    float4 finalCol = lightAmbientColour + diffuseCalc;
+    
+    float3 halfwayVector = normalize(lightDir + viewDir);
+    float4 specularCalc = pow(saturate(dot(worldNormal, halfwayVector)), 28);
+    
+    float4 finalCol = lightAmbientColour + diffuseCalc + specularCalc;
     
     payload.colorAndDistance = float4(finalCol);
 }
