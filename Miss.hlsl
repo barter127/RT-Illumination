@@ -1,6 +1,7 @@
 #include "Common.hlsl"
 
-[shader("miss")] void Miss(inout HitInfo payload
+[shader("miss")] 
+void Miss(inout HitInfo payload
                            : SV_RayPayload) {
     
     float3 rayDir = WorldRayOrigin();

@@ -261,10 +261,10 @@ void DXRSetup::LoadAssets()
 	pDrawableObject->update(0);
 
 	DrawableGameObject* pDrawableObject2 = new DrawableGameObject();
-	pDrawableObject2->initMeshFromPath(m_device, "Models/donut.obj");
-	pDrawableObject2->setScale({ 0.1f, 0.1f, 0.1 });
-	pDrawableObject2->setPosition({ 0.0f, 0.0f, 0.0 });
-	pDrawableObject2->setEulerRotation({ 0, 0, 0 });
+	pDrawableObject2->initMeshFromPath(m_device, "Models/Plane.obj");
+	pDrawableObject2->setScale({ 1.0f, 1.0f, 1.0f });
+	pDrawableObject2->setPosition({ 0.0f, -1.0f, 0.0f });
+	pDrawableObject2->setEulerRotation({ 180.0f, 0.0f, 0.0f });
 	pDrawableObject2->update(0);
 
 
@@ -365,6 +365,8 @@ ComPtr<ID3D12RootSignature> DXRSetup::CreateHitSignature() {
 	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_SRV, 0 /*t0*/); // vertex data
 	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_SRV, 1 /*t1*/); // indices
 	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_CBV, 0 /*b0*/); // Lighting
+
+	rsc.AddHeapRangesParameter({ { 2 /*t2*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1 /*2nd slot of the heap (see CreateShaderResourceHeap() */ } }); /*Top-level acceleration structure*/
 	return rsc.Generate(m_device.Get(), true);
 }
 
@@ -398,6 +400,7 @@ void DXRSetup::CreateRaytracingPipeline()
 	context->m_rayGenLibrary = nv_helpers_dx12::CompileShaderLibrary(L"RayGen.hlsl");
 	context->m_missLibrary = nv_helpers_dx12::CompileShaderLibrary(L"Miss.hlsl");
 	context->m_hitLibrary = nv_helpers_dx12::CompileShaderLibrary(L"Hit.hlsl");
+	context->m_shadowLibrary = nv_helpers_dx12::CompileShaderLibrary(L"Shadow.hlsl");
 
 	// In a way similar to DLLs, each library is associated with a number of
 	// exported symbols. This
@@ -405,8 +408,9 @@ void DXRSetup::CreateRaytracingPipeline()
 	// can contain an arbitrary number of symbols, whose semantic is given in HLSL
 	// using the [shader("xxx")] syntax
 	pipeline.AddLibrary(context->m_rayGenLibrary.Get(), { L"RayGen" });
-	pipeline.AddLibrary(context->m_missLibrary.Get(), { L"Miss" });
+	pipeline.AddLibrary(context->m_missLibrary.Get(), { L"Miss"});
 	pipeline.AddLibrary(context->m_hitLibrary.Get(), { L"ClosestHit", L"PlaneClosestHit"});
+	pipeline.AddLibrary(context->m_shadowLibrary.Get(), { L"ShadowMiss", L"ShadowClosestHit" });
 
 	// To be used, each DX12 shader needs a root signature defining which
 	// parameters and buffers will be accessed.
@@ -433,6 +437,7 @@ void DXRSetup::CreateRaytracingPipeline()
 	// colors
 	pipeline.AddHitGroup(L"HitGroup", L"ClosestHit");
 	pipeline.AddHitGroup(L"PlaneHitGroup", L"PlaneClosestHit");
+	pipeline.AddHitGroup(L"ShadowHitGroup", L"ShadowClosestHit");
 
 	// The following section associates the root signature to each shader. Note
 	// that we can explicitly show that some shaders share the same root signature
@@ -461,7 +466,7 @@ void DXRSetup::CreateRaytracingPipeline()
 	// then requires a trace depth of 1. Note that this recursion depth should be
 	// kept to a minimum for best performance. Path tracing algorithms can be
 	// easily flattened into a simple loop in the ray generation.
-	pipeline.SetMaxRecursionDepth(1);
+	pipeline.SetMaxRecursionDepth(8);
 
 	// Compile the pipeline for execution on the GPU
 	context->m_rtStateObject = pipeline.Generate();
@@ -587,20 +592,40 @@ void DXRSetup::CreateShaderBindingTable()
 	// The miss and hit shaders do not access any external resources: instead they
 	// communicate their results through the ray payload
 	context->m_sbtHelper.AddMissProgram(L"Miss", {});
+	context->m_sbtHelper.AddMissProgram(L"ShadowMiss", {});
 
 	// Adding the triangle hit shader
 	context->m_sbtHelper.AddHitGroup(L"HitGroup",
 		{ (void*)(m_app->m_drawableObjects[0]->getVertexBuffer()->GetGPUVirtualAddress()),
 			(void*)(m_app->m_drawableObjects[0]->getIndexBuffer()->GetGPUVirtualAddress()),
-			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress())
+			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress()),
+			heapPointer
+		});
+
+	// Adding Shadow Hit Group.
+	context->m_sbtHelper.AddHitGroup(L"ShadowHitGroup",
+		{ (void*)(m_app->m_drawableObjects[0]->getVertexBuffer()->GetGPUVirtualAddress()),
+			(void*)(m_app->m_drawableObjects[0]->getIndexBuffer()->GetGPUVirtualAddress()),
+			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress()),
+			heapPointer
 		});
 
 	// Adding the plane hit shader
 	context->m_sbtHelper.AddHitGroup(L"PlaneHitGroup",
 		{ (void*)(m_app->m_drawableObjects[1]->getVertexBuffer()->GetGPUVirtualAddress()),
 			(void*)(m_app->m_drawableObjects[1]->getIndexBuffer()->GetGPUVirtualAddress()),
-			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress())
+			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress()),
+			heapPointer
 		});
+
+	// Adding the plane shadow hit shader.
+	context->m_sbtHelper.AddHitGroup(L"ShadowHitGroup",
+		{ (void*)(m_app->m_drawableObjects[1]->getVertexBuffer()->GetGPUVirtualAddress()),
+			(void*)(m_app->m_drawableObjects[1]->getIndexBuffer()->GetGPUVirtualAddress()),
+			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress()),
+			heapPointer
+		});
+
 
 	// Compute the size of the SBT given the number of shaders and their
 	// parameters
@@ -665,7 +690,7 @@ void DXRSetup::CreateLightBuffer()
 		nv_helpers_dx12::kUploadHeapProps);
 
 	LightBuffer lb = { 
-		{0,0,0,0}, 
+		{0,1,0,0}, 
 		{1,0,0,1}, 
 		{0.1,1,0.1,1}, 
 		{1,1,1,1} };
@@ -766,7 +791,7 @@ void DXRSetup::CreateTopLevelAS(
 			static_cast<UINT>(0));
 		context->m_topLevelASGenerator.AddInstance(instances[1].first.Get(),
 			instances[1].second, static_cast<UINT>(1),
-			static_cast<UINT>(1));
+			static_cast<UINT>(2));
 
 
 	

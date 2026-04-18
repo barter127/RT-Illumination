@@ -12,3 +12,9 @@ struct HitInfo {
 struct Attributes {
   float2 bary;
 };
+
+// Holds flag to see if object is occluded.
+struct ShadowHitInfo
+{
+    bool isHit;
+};

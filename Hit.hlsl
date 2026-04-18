@@ -10,6 +10,8 @@ struct STriVertex
 StructuredBuffer<STriVertex> BTriVertex : register(t0);
 StructuredBuffer<int> indices : register(t1);
 
+RaytracingAccelerationStructure SceneBVH : register(t2);
+
 cbuffer LightParams : register(b0)
 {
     float4 lightPosition;
@@ -31,6 +33,33 @@ float3 HitWorldPosition()
     return WorldRayOrigin() + RayTCurrent() * WorldRayDirection();
 }
 
+bool TraceShadowRay()
+{
+     // Fire Shadow Ray.
+    RayDesc ray;
+    ray.Origin = HitWorldPosition();
+    ray.Direction = normalize(lightPosition.xyz - ray.Origin);
+    
+    ray.TMin = 0.01;
+    ray.TMax = 100000;
+    
+    // Init payload.
+    ShadowHitInfo shadowPayload;
+    shadowPayload.isHit = false;
+    
+    TraceRay(
+    SceneBVH, // AS
+    RAY_FLAG_NONE,
+    0xFF, // Instance mask.
+    1, // Hit shader offset.
+    0, // Geometry Stide.
+    1, // Index of miss shader.
+    ray, // Ray info.
+    shadowPayload); // Payload.   
+    
+    return shadowPayload.isHit;
+}
+
 [shader("closesthit")]
 void ClosestHit(inout HitInfo payload, Attributes attrib)
 {
@@ -42,19 +71,30 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     vertexNormals[1] = BTriVertex[indices[vertID + 1]].normal.xyz;
     vertexNormals[2] = BTriVertex[indices[vertID + 2]].normal.xyz;
     
-    float3 triNormal = HitAttributeFloat3(vertexNormals, attrib);
-    float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
+    bool ShadowRayHit = TraceShadowRay();
     
-    float3 lightDir = float3(0, 1, 0);
-    float3 viewDir = WorldRayOrigin();
+    float4 ambientCalc = lightAmbientColour * (ShadowRayHit ? 0.3f : 1.0f);
     
-    float diff = saturate(dot(worldNormal, lightDir));
-    float4 diffuseCalc = diff * lightDiffuseColour;
+    float4 finalCol = ambientCalc;
     
-    float3 halfwayVector = normalize(lightDir + viewDir);
-    float4 specularCalc = pow(saturate(dot(worldNormal, halfwayVector)), 28);
+    if (!ShadowRayHit)
+    {
+        float3 triNormal = HitAttributeFloat3(vertexNormals, attrib);
+        float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
     
-    float4 finalCol = lightAmbientColour + diffuseCalc + specularCalc;
+        float3 lightDir = float3(0, 1, 0);
+        float3 viewDir = WorldRayOrigin();
+        
+        // Diffuse.
+        float diff = saturate(dot(worldNormal, lightDir));
+        float4 diffuseCalc = diff * lightDiffuseColour;
+    
+        // Specular.
+        float3 halfwayVector = normalize(lightDir + viewDir);
+        float4 specularCalc = pow(saturate(dot(worldNormal, halfwayVector)), 28/*ToDo add Specular Power*/);
+        
+        finalCol += diffuseCalc + specularCalc;
+    }
     
     payload.colorAndDistance = float4(finalCol);
 }
@@ -70,12 +110,30 @@ void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
     vertexNormals[1] = BTriVertex[indices[vertID + 1]].normal.xyz;
     vertexNormals[2] = BTriVertex[indices[vertID + 2]].normal.xyz;
     
-    float3 triNormal = HitAttributeFloat3(vertexNormals, attrib);
-    float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
+    bool ShadowRayHit = TraceShadowRay();
     
-    float diff = max(dot(worldNormal, WorldRayDirection()), 0.0f);
-    float4 diffuseCalc = diff * lightDiffuseColour;
-    float4 finalCol = lightAmbientColour + diffuseCalc;
+    float4 ambientCalc = lightAmbientColour * (ShadowRayHit ? 0.3f : 1.0f);
+    
+    float4 finalCol = ambientCalc;
+    
+    if (!ShadowRayHit)
+    {
+        float3 triNormal = HitAttributeFloat3(vertexNormals, attrib);
+        float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
+    
+        float3 lightDir = float3(0, 1, 0);
+        float3 viewDir = WorldRayOrigin();
+        
+        // Diffuse.
+        float diff = saturate(dot(worldNormal, lightDir));
+        float4 diffuseCalc = diff * lightDiffuseColour;
+    
+        // Specular.
+        float3 halfwayVector = normalize(lightDir + viewDir);
+        float4 specularCalc = pow(saturate(dot(worldNormal, halfwayVector)), 28 /*ToDo add Specular Power*/);
+        
+        finalCol += diffuseCalc + specularCalc;
+    }
     
     payload.colorAndDistance = float4(finalCol);
 }

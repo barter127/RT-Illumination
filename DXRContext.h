@@ -54,6 +54,7 @@ class DXRContext
 	ComPtr<IDxcBlob> m_rayGenLibrary; // ray gen shader
 	ComPtr<IDxcBlob> m_hitLibrary; // hit shader
 	ComPtr<IDxcBlob> m_missLibrary; // miss shader
+	ComPtr<IDxcBlob> m_shadowLibrary; // Shadow shader
 
 	ComPtr<ID3D12RootSignature> m_rayGenSignature; // ray gen signature (a link to to the registers in the shader)
 	ComPtr<ID3D12RootSignature> m_hitSignature; // hit signature (a link to to the registers in the shader)

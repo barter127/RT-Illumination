@@ -222,13 +222,10 @@ void DrawableGameObject::update(float t)
 
 	cummulativeTime += t * speedMult;
 
-	// Cube:  Rotate around origin
-	XMMATRIX mSpin = XMMatrixRotationZ(cummulativeTime);
-
 	XMMATRIX mTranslate = XMMatrixTranslation(m_position.x, m_position.y, m_position.z);
 	XMMATRIX mRotation = XMMatrixRotationRollPitchYaw(XMConvertToRadians(m_eulerRotation.x), XMConvertToRadians(m_eulerRotation.y), XMConvertToRadians(m_eulerRotation.z));
 	XMMATRIX mScale = XMMatrixScaling(m_scale.x, m_scale.y, m_scale.z);
 
-	XMMATRIX world = mScale * mRotation * mSpin * mTranslate;
+	XMMATRIX world = mScale * mRotation * mTranslate;
 	XMStoreFloat4x4(&m_World, world);
 }
