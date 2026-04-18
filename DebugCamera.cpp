@@ -20,6 +20,31 @@ void DebugCamera::Initialise(float yaw, float pitch, float sensitivity, float sp
 	m_pitch = pitch;
 	m_sensitivity = sensitivity;
 	m_speed = speed;
+
+	constexpr XMFLOAT3 DEFAULT_FORWARD = { 0, 0, 1 };
+
+	XMVECTOR eyeVector = XMLoadFloat3(&m_eye);
+	XMVECTOR atVector = XMLoadFloat3(&m_at);
+	XMVECTOR upVector = XMLoadFloat3(&m_up);
+
+	XMVECTOR forwardVector = XMLoadFloat3(&DEFAULT_FORWARD);
+
+	XMMATRIX rotation = XMMatrixRotationRollPitchYaw(XMConvertToRadians(m_pitch), XMConvertToRadians(m_yaw), 0.0f);
+	atVector = XMVector3TransformNormal(forwardVector, rotation);
+	atVector = XMVectorAdd(atVector, eyeVector);
+
+	XMMATRIX view = XMMatrixLookAtLH(eyeVector, atVector, upVector);
+
+	forwardVector = XMVector3Normalize(forwardVector);
+	forwardVector = XMVector3TransformNormal(forwardVector, rotation);
+	XMStoreFloat3(&currentForward, forwardVector);
+	XMStoreFloat3(&currentBackward, -forwardVector);
+
+	XMVECTOR leftVector = XMVector3Cross(forwardVector, upVector);
+	XMStoreFloat3(&currentRight, -leftVector);
+	XMStoreFloat3(&currentLeft, leftVector);
+
+	XMStoreFloat4x4(&m_view, view);
 }
 
 void DebugCamera::Update(float deltaTime)

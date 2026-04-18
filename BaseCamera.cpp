@@ -18,7 +18,7 @@ float windowWidth, float windowHeight, float near, float far) :
 	XMStoreFloat4x4(&m_view, XMMatrixLookAtLH(XMLoadFloat3(&m_eye), XMLoadFloat3(&m_at), XMLoadFloat3(&m_up)));
 
 	// Create Projection Mat.
-	XMMATRIX perspective = XMMatrixPerspectiveFovLH(XMConvertToRadians(90), m_aspect, m_nearPlane, m_farPlane);
+	XMMATRIX perspective = XMMatrixPerspectiveFovLH(XMConvertToRadians(-90), m_aspect, m_nearPlane, m_farPlane);
 	XMStoreFloat4x4(&m_projection, perspective);
 
 	// Maybe Orthographic mode?

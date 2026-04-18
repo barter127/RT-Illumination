@@ -649,7 +649,7 @@ void DXRSetup::CreateCamera(XMFLOAT3 eye, XMFLOAT3 lookAt, XMFLOAT3 up)
 	DXRContext* context = m_app->GetContext();
 
 	context->m_camera = make_unique<DebugCamera>(eye, lookAt, up);
-	context->m_camera.get()->Update(0.0f);
+	context->m_camera.get()->Initialise(0.0f, 0.0f, 0.5f, 5.0f);
 
 	context->m_cameraBufferSize = 256;
 	context->m_cameraBuffer = nv_helpers_dx12::CreateBuffer(m_device.Get(), 

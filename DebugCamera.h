@@ -26,8 +26,8 @@ private:
 
 public:
 	// This could probably be moved to base Cam Class.
-	float m_yaw = 0;
-	float m_pitch = 0;
+	float m_yaw = 0.0f;
+	float m_pitch = 0.0f;
 
 	bool m_firstMouse = true;
 
