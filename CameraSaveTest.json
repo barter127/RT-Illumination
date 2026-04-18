@@ -1,0 +1,87 @@
+{
+  "Active Cam": 0,
+  "Cameras": [
+    {
+      "At": {
+        "X": 0.0,
+        "Y": 0.0,
+        "Z": 0.0
+      },
+      "Camera Type": "Debug",
+      "Eye": {
+        "X": 2.6708991527557373,
+        "Y": 1.5327826738357544,
+        "Z": 3.1765241622924805
+      },
+      "Pitch": 8.399983406066895,
+      "Sensitivity": 0.30000001192092896,
+      "Speed": 5.0,
+      "Up": {
+        "X": 0.0,
+        "Y": 1.0,
+        "Z": 0.0
+      },
+      "Yaw": 192.60006713867188
+    }
+  ],
+  "GameObjects": [
+    {
+      "ModelPath": "Models/Iggy/model.obj",
+      "Name": "Default Object",
+      "Position": {
+        "X": 0.0,
+        "Y": 0.0,
+        "Z": 0.0
+      },
+      "Rotation": {
+        "X": 0.0,
+        "Y": 0.0,
+        "Z": 0.0
+      },
+      "Scale": {
+        "X": 1.0,
+        "Y": 1.0,
+        "Z": 1.0
+      }
+    },
+    {
+      "ModelPath": "Primitives/Prim_Cube.obj",
+      "Name": "Default Object",
+      "Position": {
+        "X": 2.0,
+        "Y": 1.0,
+        "Z": -10.0
+      },
+      "Rotation": {
+        "X": 0.0,
+        "Y": 0.0,
+        "Z": 0.0
+      },
+      "Scale": {
+        "X": 1.0,
+        "Y": 1.0,
+        "Z": 1.0
+      }
+    },
+    {
+      "ModelPath": "Primitives/Prim_Torus.obj",
+      "Name": "Default Object",
+      "Position": {
+        "X": 2.0,
+        "Y": 1.0,
+        "Z": -10.0
+      },
+      "Rotation": {
+        "X": 0.0,
+        "Y": 0.0,
+        "Z": 0.0
+      },
+      "Scale": {
+        "X": 1.0,
+        "Y": 1.0,
+        "Z": 1.0
+      }
+    }
+  ],
+  "SceneName": "Osaka"
+}

@@ -7,7 +7,7 @@
 #include "common.h"
 #include <memory>
 
-class Camera;
+class DebugCamera;
 
 class DXRContext
 {
@@ -17,7 +17,7 @@ class DXRContext
 
 
 	// === Camera ===
-	std::unique_ptr<Camera> m_camera;
+	std::unique_ptr<DebugCamera> m_camera;
 	ComPtr<ID3D12Resource> m_cameraBuffer;
 	uint32_t m_cameraBufferSize = 0;
 

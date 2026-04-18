@@ -14,7 +14,7 @@
 #include "DXRHelper.h"
 
 #include "DrawableGameObject.h"
-#include "Camera.h"
+#include "DebugCamera.h"
 
 
 DXRSetup::DXRSetup(DXRApp* app)
@@ -257,7 +257,7 @@ void DXRSetup::LoadAssets()
 	DrawableGameObject* pDrawableObject = new DrawableGameObject();
 	pDrawableObject->initMeshFromPath(m_device, "Models/torusKnot.obj");
 	//pDrawableObject->setPosition({ 0.5f, 0.0f, -3.0 });
-	pDrawableObject->setScale({ 0.1f, 0.1f, 0.1 });
+	pDrawableObject->setScale({ 0.1f, 0.1f, 0.1f });
 	pDrawableObject->update(0);
 
 	DrawableGameObject* pDrawableObject2 = new DrawableGameObject();
@@ -648,7 +648,8 @@ void DXRSetup::CreateCamera(XMFLOAT3 eye, XMFLOAT3 lookAt, XMFLOAT3 up)
 {
 	DXRContext* context = m_app->GetContext();
 
-	context->m_camera = make_unique<Camera>(eye, lookAt, up);
+	context->m_camera = make_unique<DebugCamera>(eye, lookAt, up);
+	context->m_camera.get()->Update(0.0f);
 
 	context->m_cameraBufferSize = 256;
 	context->m_cameraBuffer = nv_helpers_dx12::CreateBuffer(m_device.Get(), 
@@ -668,7 +669,7 @@ void DXRSetup::UpdateCameraBuffer()
 	XMMATRIX perspectiveMat = XMMatrixPerspectiveFovRH(fovAngleY, m_app->m_aspectRatio, 0.1f, 1000.0f);
 
 	// Set 1st and 2nd index to view and perps matrices respectively/ 
-	matrices[0] = XMMatrixInverse(nullptr, context->m_camera.get()->GetViewMatrix());
+	matrices[0] = XMMatrixInverse(nullptr, context->m_camera.get()->GetView());
 	matrices[1] = XMMatrixInverse(nullptr, perspectiveMat);
 
 	// Copy data to cb.
@@ -690,10 +691,10 @@ void DXRSetup::CreateLightBuffer()
 		nv_helpers_dx12::kUploadHeapProps);
 
 	LightBuffer lb = { 
-		{0,1,0,0}, 
-		{1,0,0,1}, 
-		{0.1,1,0.1,1}, 
-		{1,1,1,1} };
+		{0.0f, 1.0f, 0.0f, 0.0f},
+		{1.0f, 0.0f, 0.0f,1.0f},
+		{0.1f,1.0f,0.1f,1.0f}, 
+		{1.0f, 1.0f, 1.0f, 1.0f} };
 
 	// Copy data to cb.
 	uint8_t* pData;

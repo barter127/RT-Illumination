@@ -19,7 +19,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Win32Application.cpp" />
-    <ClCompile Include="DXRApp.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="imgui.cpp">
@@ -62,15 +61,30 @@
       <Filter>Microsoft Helpers</Filter>
     </ClCompile>
     <ClCompile Include="DrawableGameObject.cpp" />
-    <ClCompile Include="DXRSetup.cpp" />
-    <ClCompile Include="DXRContext.cpp" />
-    <ClCompile Include="DXRRuntime.cpp" />
     <ClCompile Include="OBJLoader.cpp" />
     <ClCompile Include="ImGuiWrapper.cpp" />
+    <ClCompile Include="BaseCamera.cpp">
+      <Filter>Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="DebugCamera.cpp">
+      <Filter>Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="DXRApp.cpp">
+      <Filter>DX</Filter>
+    </ClCompile>
+    <ClCompile Include="DXRContext.cpp">
+      <Filter>DX</Filter>
+    </ClCompile>
+    <ClCompile Include="DXRRuntime.cpp">
+      <Filter>DX</Filter>
+    </ClCompile>
+    <ClCompile Include="DXRSetup.cpp">
+      <Filter>DX</Filter>
+    </ClCompile>
+    <ClCompile Include="Input.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Win32Application.h" />
-    <ClInclude Include="DXRApp.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="imconfig.h">
       <Filter>IMGui</Filter>
@@ -125,25 +139,52 @@
     </ClInclude>
     <ClInclude Include="DrawableGameObject.h" />
     <ClInclude Include="common.h" />
-    <ClInclude Include="DXRSetup.h" />
-    <ClInclude Include="DXRContext.h" />
-    <ClInclude Include="DXRRuntime.h" />
     <ClInclude Include="OBJLoader.h" />
     <ClInclude Include="ImGuiWrapper.h" />
-    <ClInclude Include="Camera.h" />
+    <ClInclude Include="BaseCamera.h">
+      <Filter>Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="DXRApp.h">
+      <Filter>DX</Filter>
+    </ClInclude>
+    <ClInclude Include="DXRContext.h">
+      <Filter>DX</Filter>
+    </ClInclude>
+    <ClInclude Include="DXRRuntime.h">
+      <Filter>DX</Filter>
+    </ClInclude>
+    <ClInclude Include="DXRSetup.h">
+      <Filter>DX</Filter>
+    </ClInclude>
+    <ClInclude Include="DebugCamera.h">
+      <Filter>Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="Input.h" />
   </ItemGroup>
   <ItemGroup>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{1d267285-86db-4fc9-a84f-49c809db0105}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Camera">
+      <UniqueIdentifier>{5db2e317-76a3-47ae-9f76-dc6c9344502c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DX">
+      <UniqueIdentifier>{c5fc69b4-5cc3-4b15-90c0-a524d342b9c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External Libraries">
+      <UniqueIdentifier>{010a0c57-3470-4727-9266-ca07c17628a8}</UniqueIdentifier>
+    </Filter>
     <Filter Include="IMGui">
       <UniqueIdentifier>{599ca087-b3cf-4c5b-8631-1f0fa6cab3e4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="NVidia Helpers">
-      <UniqueIdentifier>{29231412-411d-485b-bdb4-b4c0f132b44f}</UniqueIdentifier>
     </Filter>
     <Filter Include="Microsoft Helpers">
       <UniqueIdentifier>{f7f193b4-e66b-42eb-b184-5941906e4763}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shaders">
-      <UniqueIdentifier>{1d267285-86db-4fc9-a84f-49c809db0105}</UniqueIdentifier>
+    <Filter Include="NVidia Helpers">
+      <UniqueIdentifier>{29231412-411d-485b-bdb4-b4c0f132b44f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

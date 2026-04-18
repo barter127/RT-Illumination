@@ -4,7 +4,7 @@
 
 #include "nv_helpers_dx12/ShaderBindingTableGenerator.h"
 
-#include "Camera.h"
+#include "DebugCamera.h"
 
 
 DXRContext::DXRContext(UINT width, UINT height) : m_frameIndex(0), m_viewport(0.0f, 0.0f, static_cast<float>(width),

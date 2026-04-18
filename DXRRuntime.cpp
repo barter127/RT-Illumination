@@ -8,7 +8,7 @@
 #include "DrawableGameObject.h"
 
 #include "ImGuiWrapper.h"
-#include "Camera.h"
+#include "DebugCamera.h"
 
 ImGuiWrapper* m_ui;
 DXRRuntime::DXRRuntime(DXRApp* app)
@@ -61,7 +61,7 @@ void DXRRuntime::Update()
 	static float simpleCount = 0.0f;
 	simpleCount += deltaTime;
 
-	m_app->m_DXRContext->m_camera.get()->UpdateCameraMovement(deltaTime);
+	m_app->m_DXRContext->m_camera.get()->Update(deltaTime);
 	m_app->m_DXSetup->UpdateCameraBuffer();
 
 	int i = 0;
@@ -76,46 +76,12 @@ void DXRRuntime::Update()
 void DXRRuntime::OnKeyDown(UINT8 key)
 {
 	DXRContext* context = m_app->m_DXRContext;
-
-	if (key == 'W')
-	{
-		context->m_camera.get()->m_isMovingForward = true;
-	}
-	if (key == 'S')
-	{
-		context->m_camera.get()->m_isMovingBack = true;
-	}
-	if (key == 'D')
-	{
-		context->m_camera.get()->m_isMovingRight = true;
-	}
-	if (key == 'A')
-	{
-		context->m_camera.get()->m_isMovingLeft = true;
-	}
 }
 
 
 void DXRRuntime::OnKeyUp(UINT8 key)
 {
 	DXRContext* context = m_app->m_DXRContext;
-
-	if (key == 'W')
-	{
-		context->m_camera.get()->m_isMovingForward = false;
-	}
-	if (key == 'S')
-	{
-		context->m_camera.get()->m_isMovingBack = false;
-	}
-	if (key == 'D')
-	{
-		context->m_camera.get()->m_isMovingRight = false;
-	}
-	if (key == 'A')
-	{
-		context->m_camera.get()->m_isMovingLeft = false;
-	}
 }
 
 void DXRRuntime::OnMouseMoveDelta(float dx, float dy)
@@ -124,11 +90,7 @@ void DXRRuntime::OnMouseMoveDelta(float dx, float dy)
 
 	if (m_app->m_rMouseDown)
 	{
-		POINTS point = { -dx, -dy };
-		context->m_camera.get()->UpdateLookAt(point);
 
-		// Recenter the cursor
-		SetCursorPos(m_app->m_windowCentre.x, m_app->m_windowCentre.y);
 	}
 	else
 	{
