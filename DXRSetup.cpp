@@ -705,6 +705,7 @@ void DXRSetup::CreateLightBuffer()
 		m_app->m_lightVector[0]->m_ambientColour,
 		m_app->m_lightVector[0]->m_diffuseColour,
 		m_app->m_lightVector[0]->m_specularColour,
+		m_app->m_lightVector[0]->m_shininess,
 		m_app->m_lightVector[0]->m_attenuationRadius
 	};
 

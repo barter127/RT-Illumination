@@ -19,7 +19,9 @@ cbuffer LightParams : register(b0)
     float4 lightAmbientColour;
     float4 lightDiffuseColour;
     float4 lightSpecularColour;
+    float shininess;
     float attenuationRadius;
+    float2 padding;
 };
 
 float3 HitAttributeFloat3(float3 vertexAttribute[3], Attributes attrib)
@@ -100,12 +102,13 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     
         // Specular.
         float3 halfwayVector = normalize(lightDir + viewDir);
-        float4 specularCalc = pow(saturate(dot(worldNormal, halfwayVector)), 128/*ToDo add Specular Power*/);
+        float spec = pow(saturate(dot(worldNormal, halfwayVector)), shininess/*ToDo add Specular Power*/);
+        float4 specularCalc = spec * lightSpecularColour;
         
-        finalCol += diffuseCalc + specularCalc;
+        finalCol += (diffuseCalc + specularCalc);
     }
     
-    payload.colorAndDistance = float4(finalCol * attenuation * softShadowMultiplier);
+    payload.colorAndDistance = float4(finalCol);
 }
 
 [shader("closesthit")]
@@ -121,10 +124,10 @@ void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
     
     bool ShadowRayHit = TraceShadowRay();
     
-    float4 ambientCalc = lightAmbientColour * (ShadowRayHit ? 0.3f : 1.0f);
+    float4 ambientCalc = lightAmbientColour;
     
     float4 finalCol = ambientCalc;
-    
+    float attenuation = 1.0f;
     float softShadowMultiplier = 1.0f;
     
     float3 triNormal = HitAttributeFloat3(vertexNormals, attrib);
@@ -132,11 +135,13 @@ void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
     
     if (!ShadowRayHit)
     {
-        float3 triNormal = HitAttributeFloat3(vertexNormals, attrib);
-        float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
     
-        float3 lightDir = float3(0, 1, 0);
-        float3 viewDir = WorldRayOrigin();
+        float3 hitPos = HitWorldPosition();
+        float3 lightDir = normalize((float3) lightPosition - hitPos);
+        float3 viewDir = normalize(WorldRayOrigin() - hitPos);
+
+        float dist = length((float3) lightPosition - hitPos);
+        attenuation = saturate(1.0f - pow(dist / attenuationRadius, 2.0f));
         
         // Diffuse.
         float diff = saturate(dot(worldNormal, lightDir));
@@ -144,12 +149,11 @@ void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
     
         // Specular.
         float3 halfwayVector = normalize(lightDir + viewDir);
-        float4 specularCalc = pow(saturate(dot(worldNormal, halfwayVector)), 28 /*ToDo add Specular Power*/);
+        float spec = pow(saturate(dot(worldNormal, halfwayVector)), shininess /*ToDo add Specular Power*/);
+        float4 specularCalc = spec * lightSpecularColour;
         
-        
-        
-        finalCol += diffuseCalc + specularCalc;
+        finalCol += (diffuseCalc + specularCalc);
     }
     
-    payload.colorAndDistance = float4(RandomDirection(state), 1);
+    payload.colorAndDistance = float4(finalCol);
 }
