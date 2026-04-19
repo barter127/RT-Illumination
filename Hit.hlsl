@@ -45,7 +45,7 @@ bool TraceShadowRay()
     ray.Direction = normalize(lightPosition.xyz - ray.Origin);
     
     ray.TMin = 0.01;
-    ray.TMax = length(ray.Direction); // Ensure ray isn't too large.
+    ray.TMax = length(lightPosition.xyz - ray.Origin); // Ensure ray isn't too large.
     
     // Init payload.
     ShadowHitInfo shadowPayload;
@@ -108,6 +108,7 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
         finalCol += (diffuseCalc + specularCalc);
     }
     
+    
     payload.colorAndDistance = float4(finalCol);
 }
 
@@ -155,5 +156,6 @@ void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
         finalCol += (diffuseCalc + specularCalc);
     }
     
+        
     payload.colorAndDistance = float4(finalCol);
 }

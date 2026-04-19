@@ -256,15 +256,15 @@ void DXRSetup::LoadAssets()
 	//copiedObj->update(0);
 
 	DrawableGameObject* pDrawableObject = new DrawableGameObject();
-	pDrawableObject->initMeshFromPath(m_device, "Models/ball.obj");
+	pDrawableObject->initMeshFromPath(m_device, "Models/torusKnot.obj");
 	//pDrawableObject->setPosition({ 0.5f, 0.0f, -3.0 });
 	pDrawableObject->setScale({ 0.1f, 0.1f, 0.1f });
 	pDrawableObject->update(0);
 
 	DrawableGameObject* pDrawableObject2 = new DrawableGameObject();
-	pDrawableObject2->initMeshFromPath(m_device, "Models/Plane.obj");
-	pDrawableObject2->setScale({ 1.0f, 1.0f, 1.0f });
-	pDrawableObject2->setPosition({ 0.0f, -1.0f, 0.0f });
+	pDrawableObject2->initMeshFromPath(m_device, "Models/Cube.obj");
+	pDrawableObject2->setScale({ 10.0f, 0.2f, 10.0f });
+	pDrawableObject2->setPosition({ 0.0f, -2.0f, 0.0f });
 	pDrawableObject2->setEulerRotation({ 180.0f, 0.0f, 0.0f });
 	pDrawableObject2->update(0);
 
@@ -726,6 +726,7 @@ void DXRSetup::UpdateLightBuffer()
 		m_app->m_lightVector[0]->m_ambientColour,
 		m_app->m_lightVector[0]->m_diffuseColour,
 		m_app->m_lightVector[0]->m_specularColour,
+		m_app->m_lightVector[0]->m_shininess,
 		m_app->m_lightVector[0]->m_attenuationRadius
 	};
 
