@@ -1,4 +1,5 @@
 #include "Common.hlsl"
+#include "Random.hlsl"
 
 struct STriVertex
 { // IMPORTANT - the c++ version of this is 'Vertex' found in the common.h file
@@ -34,12 +35,6 @@ float3 HitWorldPosition()
     return WorldRayOrigin() + RayTCurrent() * WorldRayDirection();
 }
 
-float nrand(float2 uv)
-{
-    // Stolen from stackoverflow.
-    return frac(sin(dot(uv, float2(12.9898, 78.233))) * 43758.5453);
-}
-
 bool TraceShadowRay()
 {
      // Fire Shadow Ray.
@@ -65,49 +60,6 @@ bool TraceShadowRay()
     shadowPayload); // Payload.   
     
     return shadowPayload.isHit;
-}
-
-float CalculateSoftShadow(float3 shadowPoint, float3 surfaceNormal, int sampleCount)
-{
-    int hitCount = 0;
-    
-    float3 direction = normalize(lightPosition.xyz - shadowPoint);
-    for (int i = 0; i < sampleCount; i++)
-    {
-        float3 offsetPoint = shadowPoint + (0.005f * i) * surfaceNormal;
-        float3 offsetDir = direction + nrand(float2(DispatchRaysIndex().x, DispatchRaysIndex().y)) * surfaceNormal;
-        
-        // Fire Shadow Ray.
-        RayDesc ray;
-        ray.Origin = offsetPoint;
-        ray.Direction = direction;
-    
-        ray.TMin = 0.001;
-        ray.TMax = length((float3)lightPosition - shadowPoint);
-;
-    
-        // Init payload.
-        ShadowHitInfo shadowPayload;
-        shadowPayload.isHit = false;
-    
-        TraceRay(
-        SceneBVH, // AS
-        RAY_FLAG_NONE,
-        0xFF, // Instance mask.
-        1, // Hit shader offset.
-        0, // Geometry Stide.
-        1, // Index of miss shader.
-        ray, // Ray info.
-        shadowPayload); // Payload.   
-    
-        if (shadowPayload.isHit)
-        {
-            hitCount++;
-        }
-    }
-
-    return saturate(1 - ((float) hitCount / (float)sampleCount));
-
 }
 
 [shader("closesthit")]
@@ -148,13 +100,9 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     
         // Specular.
         float3 halfwayVector = normalize(lightDir + viewDir);
-        float4 specularCalc = pow(saturate(dot(worldNormal, halfwayVector)), 28/*ToDo add Specular Power*/);
+        float4 specularCalc = pow(saturate(dot(worldNormal, halfwayVector)), 128/*ToDo add Specular Power*/);
         
         finalCol += diffuseCalc + specularCalc;
-    }
-    else
-    {
-        softShadowMultiplier = CalculateSoftShadow(HitWorldPosition(), worldNormal, 1028);
     }
     
     payload.colorAndDistance = float4(finalCol * attenuation * softShadowMultiplier);
@@ -202,10 +150,6 @@ void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
         
         finalCol += diffuseCalc + specularCalc;
     }
-    else
-    {
-        softShadowMultiplier = CalculateSoftShadow(HitWorldPosition(), worldNormal, 64);
-    }
     
-    payload.colorAndDistance = float4(finalCol * softShadowMultiplier);
+    payload.colorAndDistance = float4(RandomDirection(state), 1);
 }
