@@ -36,6 +36,7 @@ float3 HitWorldPosition()
 
 float nrand(float2 uv)
 {
+    // Stolen from stackoverflow.
     return frac(sin(dot(uv, float2(12.9898, 78.233))) * 43758.5453);
 }
 
@@ -47,7 +48,7 @@ bool TraceShadowRay()
     ray.Direction = normalize(lightPosition.xyz - ray.Origin);
     
     ray.TMin = 0.01;
-    ray.TMax = 100000;
+    ray.TMax = length(ray.Direction); // Ensure ray isn't too large.
     
     // Init payload.
     ShadowHitInfo shadowPayload;
@@ -66,6 +67,49 @@ bool TraceShadowRay()
     return shadowPayload.isHit;
 }
 
+float CalculateSoftShadow(float3 shadowPoint, float3 surfaceNormal, int sampleCount)
+{
+    int hitCount = 0;
+    
+    float3 direction = normalize(lightPosition.xyz - shadowPoint);
+    for (int i = 0; i < sampleCount; i++)
+    {
+        float3 offsetPoint = shadowPoint + (0.005f * i) * surfaceNormal;
+        float3 offsetDir = direction + nrand(float2(DispatchRaysIndex().x, DispatchRaysIndex().y)) * surfaceNormal;
+        
+        // Fire Shadow Ray.
+        RayDesc ray;
+        ray.Origin = offsetPoint;
+        ray.Direction = direction;
+    
+        ray.TMin = 0.001;
+        ray.TMax = length((float3)lightPosition - shadowPoint);
+;
+    
+        // Init payload.
+        ShadowHitInfo shadowPayload;
+        shadowPayload.isHit = false;
+    
+        TraceRay(
+        SceneBVH, // AS
+        RAY_FLAG_NONE,
+        0xFF, // Instance mask.
+        1, // Hit shader offset.
+        0, // Geometry Stide.
+        1, // Index of miss shader.
+        ray, // Ray info.
+        shadowPayload); // Payload.   
+    
+        if (shadowPayload.isHit)
+        {
+            hitCount++;
+        }
+    }
+
+    return saturate(1 - ((float) hitCount / (float)sampleCount));
+
+}
+
 [shader("closesthit")]
 void ClosestHit(inout HitInfo payload, Attributes attrib)
 {
@@ -79,15 +123,17 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     
     bool ShadowRayHit = TraceShadowRay();
     
-    float4 ambientCalc = lightAmbientColour * (ShadowRayHit ? 0.3f : 1.0f);
+    float4 ambientCalc = lightAmbientColour;
     
     float4 finalCol = ambientCalc;
     float attenuation = 1.0f;
+    float softShadowMultiplier = 1.0f;
+    
+    float3 triNormal = HitAttributeFloat3(vertexNormals, attrib);
+    float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
     
     if (!ShadowRayHit)
     {
-        float3 triNormal = HitAttributeFloat3(vertexNormals, attrib);
-        float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
     
         float3 hitPos = HitWorldPosition();
         float3 lightDir = normalize((float3)lightPosition - hitPos);
@@ -106,8 +152,12 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
         
         finalCol += diffuseCalc + specularCalc;
     }
+    else
+    {
+        softShadowMultiplier = CalculateSoftShadow(HitWorldPosition(), worldNormal, 1028);
+    }
     
-    payload.colorAndDistance = float4(finalCol * attenuation);
+    payload.colorAndDistance = float4(finalCol * attenuation * softShadowMultiplier);
 }
 
 [shader("closesthit")]
@@ -127,6 +177,11 @@ void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
     
     float4 finalCol = ambientCalc;
     
+    float softShadowMultiplier = 1.0f;
+    
+    float3 triNormal = HitAttributeFloat3(vertexNormals, attrib);
+    float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
+    
     if (!ShadowRayHit)
     {
         float3 triNormal = HitAttributeFloat3(vertexNormals, attrib);
@@ -143,8 +198,14 @@ void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
         float3 halfwayVector = normalize(lightDir + viewDir);
         float4 specularCalc = pow(saturate(dot(worldNormal, halfwayVector)), 28 /*ToDo add Specular Power*/);
         
+        
+        
         finalCol += diffuseCalc + specularCalc;
     }
+    else
+    {
+        softShadowMultiplier = CalculateSoftShadow(HitWorldPosition(), worldNormal, 64);
+    }
     
-    payload.colorAndDistance = float4(finalCol);
+    payload.colorAndDistance = float4(finalCol * softShadowMultiplier);
 }

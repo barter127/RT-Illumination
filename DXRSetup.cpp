@@ -255,7 +255,7 @@ void DXRSetup::LoadAssets()
 	//copiedObj->update(0);
 
 	DrawableGameObject* pDrawableObject = new DrawableGameObject();
-	pDrawableObject->initMeshFromPath(m_device, "Models/torusKnot.obj");
+	pDrawableObject->initMeshFromPath(m_device, "Models/ball.obj");
 	//pDrawableObject->setPosition({ 0.5f, 0.0f, -3.0 });
 	pDrawableObject->setScale({ 0.1f, 0.1f, 0.1f });
 	pDrawableObject->update(0);
@@ -692,7 +692,7 @@ void DXRSetup::CreateLightBuffer()
 
 	LightBuffer lb = {
 		{0.0f, 1.0f, 0.0f, 0.0f},
-		{1.0f, 0.0f, 0.0f,1.0f},
+		{0.2f, 0.2f, 0.2f,1.0f},
 		{0.1f,1.0f,0.1f,1.0f},
 		{1.0f, 1.0f, 1.0f, 1.0f},
 		10.0f
