@@ -9,6 +9,7 @@
 
 #include "ImGuiWrapper.h"
 #include "DebugCamera.h"
+#include "PointLight.h"
 
 ImGuiWrapper* m_ui;
 DXRRuntime::DXRRuntime(DXRApp* app)
@@ -33,6 +34,11 @@ void DXRRuntime::Render()
 	ImGui::Text("ImGUI version: (%s)", IMGUI_VERSION);
 
 	m_ui->TransformPanel(*m_app->m_drawableObjects[0]);
+	m_ui->LightPanel(&m_app->m_lightVector[0]->m_ambientColour.x,
+		&m_app->m_lightVector[0]->m_diffuseColour.x,
+		&m_app->m_lightVector[0]->m_specularColour.x,
+		&m_app->m_lightVector[0]->m_shininess,
+		m_app->m_lightVector[0]->m_position);
 
 	ImGui::End();
 
@@ -63,6 +69,7 @@ void DXRRuntime::Update()
 
 	m_app->m_DXRContext->m_camera.get()->Update(deltaTime);
 	m_app->m_DXSetup->UpdateCameraBuffer();
+	m_app->m_DXSetup->UpdateLightBuffer();
 
 	int i = 0;
 	for (DrawableGameObject* dgo : m_app->m_drawableObjects)

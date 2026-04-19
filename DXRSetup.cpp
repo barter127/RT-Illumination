@@ -15,6 +15,7 @@
 
 #include "DrawableGameObject.h"
 #include "DebugCamera.h"
+#include "PointLight.h"
 
 
 DXRSetup::DXRSetup(DXRApp* app)
@@ -271,6 +272,14 @@ void DXRSetup::LoadAssets()
 	m_app->m_drawableObjects.push_back(pDrawableObject);
 	m_app->m_drawableObjects.push_back(pDrawableObject2);
 	//m_app->m_drawableObjects.push_back(copiedObj);
+
+	PointLight* light = new PointLight({0.0f, 1.0f, 0.0f, 0.0f },
+		{ 0.2f, 0.2f, 0.2f,1.0f },
+		{ 0.1f,1.0f,0.1f,1.0f },
+		{ 1.0f, 1.0f, 1.0f, 1.0f },
+		28.0f, 10.0f);
+
+	m_app->m_lightVector.push_back(light);
 
 	// Create synchronization objects and wait until assets have been uploaded to
 	// the GPU.
@@ -690,19 +699,40 @@ void DXRSetup::CreateLightBuffer()
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nv_helpers_dx12::kUploadHeapProps);
 
+	// Maybe I should make a function that returns a light buffer;
 	LightBuffer lb = {
-		{0.0f, 1.0f, 0.0f, 0.0f},
-		{0.2f, 0.2f, 0.2f,1.0f},
-		{0.1f,1.0f,0.1f,1.0f},
-		{1.0f, 1.0f, 1.0f, 1.0f},
-		10.0f
+		m_app->m_lightVector[0]->m_position,
+		m_app->m_lightVector[0]->m_ambientColour,
+		m_app->m_lightVector[0]->m_diffuseColour,
+		m_app->m_lightVector[0]->m_specularColour,
+		m_app->m_lightVector[0]->m_attenuationRadius
 	};
 
 	// Copy data to cb.
 	uint8_t* pData;
 	ThrowIfFailed(context->m_lightBuffer->Map(0, nullptr, (void**)&pData));
 	memcpy(pData, &lb, context->m_lightBufferSize);
-	context->m_cameraBuffer->Unmap(0, nullptr);
+	context->m_lightBuffer->Unmap(0, nullptr);
+}
+
+void DXRSetup::UpdateLightBuffer()
+{
+	DXRContext* context = m_app->GetContext();
+
+	// Maybe I should make a function that returns a light buffer;
+	LightBuffer lb = {
+		m_app->m_lightVector[0]->m_position,
+		m_app->m_lightVector[0]->m_ambientColour,
+		m_app->m_lightVector[0]->m_diffuseColour,
+		m_app->m_lightVector[0]->m_specularColour,
+		m_app->m_lightVector[0]->m_attenuationRadius
+	};
+
+	// Copy data to cb.
+	uint8_t* pData;
+	ThrowIfFailed(context->m_lightBuffer->Map(0, nullptr, (void**)&pData));
+	memcpy(pData, &lb, context->m_lightBufferSize);
+	context->m_lightBuffer->Unmap(0, nullptr);
 }
 
 //-----------------------------------------------------------------------------

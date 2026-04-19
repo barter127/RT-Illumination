@@ -19,6 +19,7 @@
 
 
 class DrawableGameObject;
+class PointLight;
 
 using namespace DirectX;
 using namespace std;
@@ -69,6 +70,7 @@ private:
 	std::vector<std::pair<ComPtr<ID3D12Resource>, DirectX::XMMATRIX>> m_instances;
 
 	vecDrawables m_drawableObjects;
+	std::vector<PointLight*> m_lightVector;
 
 	static bool m_rMouseDown;
 	static bool m_lMouseDown;

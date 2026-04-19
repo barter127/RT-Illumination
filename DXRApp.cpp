@@ -18,6 +18,7 @@
 #include "DXRRuntime.h"
 
 #include "DrawableGameObject.h"
+#include "PointLight.h"
 
 bool DXRApp::m_rMouseDown = false;
 bool DXRApp::m_lMouseDown = false;

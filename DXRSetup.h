@@ -61,6 +61,7 @@ private:
 	void UpdateCameraBuffer();
 
 	void CreateLightBuffer();
+	void UpdateLightBuffer();
 
 	friend DXRRuntime;
 

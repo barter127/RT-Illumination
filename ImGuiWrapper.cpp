@@ -111,3 +111,35 @@ void ImGuiWrapper::DrawVec3Control(string displayString, XMFLOAT3& vector, int b
 	}
 
 }
+
+void ImGuiWrapper::LightPanel(float* ambientCol, float* diffuseCol,
+	float* specularCol, float* specularPower,
+	XMFLOAT4& lightDir)
+{
+	constexpr int resetToZero = 0;
+
+	constexpr float minSpecPower = 1.0f;
+	constexpr float maxSpecPower = 64.0f;
+
+	ImGui::Begin("Edit Light");
+
+	ImGui::ColorEdit4("Ambient Colour", ambientCol);
+
+	ImGui::NewLine();
+
+	ImGui::ColorEdit4("Diffuse Colour", diffuseCol);
+
+	ImGui::NewLine();
+
+	ImGui::ColorEdit4("Specular Colour", specularCol);
+	ImGui::SliderFloat("Specular Power", specularPower, minSpecPower, maxSpecPower, "%.1f");
+
+	ImGui::NewLine();
+
+	XMFLOAT3 lightDir3 = XMFLOAT3(lightDir.x, lightDir.y, lightDir.z);
+	DrawVec3Control("Direction", lightDir3, 75.0f, 60.0f,resetToZero);
+	lightDir.x = lightDir3.x; lightDir.y = lightDir3.y; lightDir.z = lightDir3.z;
+
+
+	ImGui::End();
+}
