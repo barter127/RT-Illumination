@@ -27,4 +27,5 @@ struct LightBuffer
 	XMFLOAT4 ambientColour;
 	XMFLOAT4 diffuseColour;
 	XMFLOAT4 specularColour;
+	float attenuationRadius;
 };

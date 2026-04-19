@@ -18,6 +18,7 @@ cbuffer LightParams : register(b0)
     float4 lightAmbientColour;
     float4 lightDiffuseColour;
     float4 lightSpecularColour;
+    float attenuationRadius;
 };
 
 float3 HitAttributeFloat3(float3 vertexAttribute[3], Attributes attrib)
@@ -31,6 +32,11 @@ float3 HitAttributeFloat3(float3 vertexAttribute[3], Attributes attrib)
 float3 HitWorldPosition()
 {
     return WorldRayOrigin() + RayTCurrent() * WorldRayDirection();
+}
+
+float nrand(float2 uv)
+{
+    return frac(sin(dot(uv, float2(12.9898, 78.233))) * 43758.5453);
 }
 
 bool TraceShadowRay()
@@ -76,14 +82,19 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     float4 ambientCalc = lightAmbientColour * (ShadowRayHit ? 0.3f : 1.0f);
     
     float4 finalCol = ambientCalc;
+    float attenuation = 1.0f;
     
     if (!ShadowRayHit)
     {
         float3 triNormal = HitAttributeFloat3(vertexNormals, attrib);
         float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
     
-        float3 lightDir = float3(0, 1, 0);
-        float3 viewDir = WorldRayOrigin();
+        float3 hitPos = HitWorldPosition();
+        float3 lightDir = normalize((float3)lightPosition - hitPos);
+        float3 viewDir = normalize(WorldRayOrigin() - hitPos);
+
+        float dist = length((float3) lightPosition - hitPos);
+        attenuation = saturate(1.0f - pow(dist / attenuationRadius, 2.0f));
         
         // Diffuse.
         float diff = saturate(dot(worldNormal, lightDir));
@@ -96,7 +107,7 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
         finalCol += diffuseCalc + specularCalc;
     }
     
-    payload.colorAndDistance = float4(finalCol);
+    payload.colorAndDistance = float4(finalCol * attenuation);
 }
 
 [shader("closesthit")]

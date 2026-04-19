@@ -690,11 +690,13 @@ void DXRSetup::CreateLightBuffer()
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nv_helpers_dx12::kUploadHeapProps);
 
-	LightBuffer lb = { 
+	LightBuffer lb = {
 		{0.0f, 1.0f, 0.0f, 0.0f},
 		{1.0f, 0.0f, 0.0f,1.0f},
-		{0.1f,1.0f,0.1f,1.0f}, 
-		{1.0f, 1.0f, 1.0f, 1.0f} };
+		{0.1f,1.0f,0.1f,1.0f},
+		{1.0f, 1.0f, 1.0f, 1.0f},
+		10.0f
+	};
 
 	// Copy data to cb.
 	uint8_t* pData;
