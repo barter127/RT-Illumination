@@ -37,6 +37,12 @@ float3 HitWorldPosition()
     return WorldRayOrigin() + RayTCurrent() * WorldRayDirection();
 }
 
+float3 SampleSphere(float3 center, float radius)
+{
+    float3 dir = RandomDirection(state);
+    return center + dir * radius;
+}
+
 bool TraceShadowRay()
 {
      // Fire Shadow Ray.
@@ -62,6 +68,48 @@ bool TraceShadowRay()
     shadowPayload); // Payload.   
     
     return shadowPayload.isHit;
+}
+
+float AccumulateSoftShadowHits(int numRays, float3 lightCentre, float radius, float3 surfaceNormal)
+{
+    int hitCount = 0;
+    
+    for (int i = 0; i < numRays; i++)
+    {
+        // Fire Soft Shadow Ray.
+        RayDesc ray;
+        ray.Origin = HitWorldPosition();
+        
+        float3 targetPos = SampleSphere(lightCentre, radius);
+        float3 direction = normalize(targetPos - ray.Origin);
+
+        
+        ray.Direction = direction;
+    
+        ray.TMin = 0.01;
+        ray.TMax = length(targetPos - ray.Origin); // Ensure ray isn't too large.
+    
+        // Init payload.
+        ShadowHitInfo shadowPayload;
+        shadowPayload.isHit = false;
+    
+        TraceRay(
+        SceneBVH, // AS
+        RAY_FLAG_NONE,
+        0xFF, // Instance mask.
+        1, // Hit shader offset.
+        0, // Geometry Stide.
+        1, // Index of miss shader.
+        ray, // Ray info.
+        shadowPayload); // Payload.   
+        
+        if (shadowPayload.isHit)
+        {
+            hitCount++;
+        }
+    }
+    
+    return clamp(1 - ((float) hitCount / (float)numRays), 0.4, 1);
 }
 
 [shader("closesthit")]
@@ -90,7 +138,7 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     {
     
         float3 hitPos = HitWorldPosition();
-        float3 lightDir = normalize((float3)lightPosition - hitPos);
+        float3 lightDir = normalize((float3) lightPosition - hitPos);
         float3 viewDir = normalize(WorldRayOrigin() - hitPos);
 
         float dist = length((float3) lightPosition - hitPos);
@@ -102,14 +150,18 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     
         // Specular.
         float3 halfwayVector = normalize(lightDir + viewDir);
-        float spec = pow(saturate(dot(worldNormal, halfwayVector)), shininess/*ToDo add Specular Power*/);
+        float spec = pow(saturate(dot(worldNormal, halfwayVector)), shininess /*ToDo add Specular Power*/);
         float4 specularCalc = spec * lightSpecularColour;
         
         finalCol += (diffuseCalc + specularCalc);
     }
+    else
+    {
+        softShadowMultiplier = AccumulateSoftShadowHits(64, (float3)lightPosition, attenuationRadius, worldNormal);
+    }
     
     
-    payload.colorAndDistance = float4(finalCol);
+    payload.colorAndDistance = float4(finalCol * softShadowMultiplier);
 }
 
 [shader("closesthit")]
@@ -155,7 +207,11 @@ void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
         
         finalCol += (diffuseCalc + specularCalc);
     }
+    else
+    {
+        softShadowMultiplier = AccumulateSoftShadowHits(64, (float3) lightPosition, attenuationRadius, worldNormal);
+    }
     
-        
-    payload.colorAndDistance = float4(finalCol);
+    
+    payload.colorAndDistance = float4(finalCol * softShadowMultiplier);
 }

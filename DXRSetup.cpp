@@ -256,7 +256,7 @@ void DXRSetup::LoadAssets()
 	//copiedObj->update(0);
 
 	DrawableGameObject* pDrawableObject = new DrawableGameObject();
-	pDrawableObject->initMeshFromPath(m_device, "Models/torusKnot.obj");
+	pDrawableObject->initMeshFromPath(m_device, "Models/Cube.obj");
 	//pDrawableObject->setPosition({ 0.5f, 0.0f, -3.0 });
 	pDrawableObject->setScale({ 0.1f, 0.1f, 0.1f });
 	pDrawableObject->update(0);
@@ -277,7 +277,7 @@ void DXRSetup::LoadAssets()
 		{ 0.2f, 0.2f, 0.2f,1.0f },
 		{ 0.1f,1.0f,0.1f,1.0f },
 		{ 1.0f, 1.0f, 1.0f, 1.0f },
-		28.0f, 10.0f);
+		28.0f, 1.0f);
 
 	m_app->m_lightVector.push_back(light);
 
