@@ -129,37 +129,29 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     
     float4 finalCol = ambientCalc;
     float attenuation = 1.0f;
-    float softShadowMultiplier = 1.0f;
     
     float3 triNormal = HitAttributeFloat3(vertexNormals, attrib);
     float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
     
-    if (!ShadowRayHit)
-    {
+    float softShadowMultiplier = AccumulateSoftShadowHits(64, (float3) lightPosition, attenuationRadius, worldNormal);
     
-        float3 hitPos = HitWorldPosition();
-        float3 lightDir = normalize((float3) lightPosition - hitPos);
-        float3 viewDir = normalize(WorldRayOrigin() - hitPos);
+    float3 hitPos = HitWorldPosition();
+    float3 lightDir = normalize((float3) lightPosition - hitPos);
+    float3 viewDir = normalize(WorldRayOrigin() - hitPos);
 
-        float dist = length((float3) lightPosition - hitPos);
-        attenuation = saturate(1.0f - pow(dist / attenuationRadius, 2.0f));
+    float dist = length((float3) lightPosition - hitPos);
+    attenuation = saturate(1.0f - pow(dist / attenuationRadius, 2.0f));
         
-        // Diffuse.
-        float diff = saturate(dot(worldNormal, lightDir));
-        float4 diffuseCalc = diff * lightDiffuseColour;
+    // Diffuse.
+    float diff = saturate(dot(worldNormal, lightDir));
+    float4 diffuseCalc = diff * lightDiffuseColour;
     
-        // Specular.
-        float3 halfwayVector = normalize(lightDir + viewDir);
-        float spec = pow(saturate(dot(worldNormal, halfwayVector)), shininess /*ToDo add Specular Power*/);
-        float4 specularCalc = spec * lightSpecularColour;
+    // Specular.
+    float3 halfwayVector = normalize(lightDir + viewDir);
+    float spec = pow(saturate(dot(worldNormal, halfwayVector)), shininess /*ToDo add Specular Power*/);
+    float4 specularCalc = spec * lightSpecularColour;
         
-        finalCol += (diffuseCalc + specularCalc);
-    }
-    else
-    {
-        softShadowMultiplier = AccumulateSoftShadowHits(64, (float3)lightPosition, attenuationRadius, worldNormal);
-    }
-    
+    finalCol += (diffuseCalc + specularCalc);
     
     payload.colorAndDistance = float4(finalCol * softShadowMultiplier);
 }
@@ -181,37 +173,29 @@ void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
     
     float4 finalCol = ambientCalc;
     float attenuation = 1.0f;
-    float softShadowMultiplier = 1.0f;
     
     float3 triNormal = HitAttributeFloat3(vertexNormals, attrib);
     float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
     
-    if (!ShadowRayHit)
-    {
+    float softShadowMultiplier = AccumulateSoftShadowHits(64, (float3) lightPosition, attenuationRadius, worldNormal);
     
-        float3 hitPos = HitWorldPosition();
-        float3 lightDir = normalize((float3) lightPosition - hitPos);
-        float3 viewDir = normalize(WorldRayOrigin() - hitPos);
+    float3 hitPos = HitWorldPosition();
+    float3 lightDir = normalize((float3) lightPosition - hitPos);
+    float3 viewDir = normalize(WorldRayOrigin() - hitPos);
 
-        float dist = length((float3) lightPosition - hitPos);
-        attenuation = saturate(1.0f - pow(dist / attenuationRadius, 2.0f));
+    float dist = length((float3) lightPosition - hitPos);
+    attenuation = saturate(1.0f - pow(dist / attenuationRadius, 2.0f));
         
-        // Diffuse.
-        float diff = saturate(dot(worldNormal, lightDir));
-        float4 diffuseCalc = diff * lightDiffuseColour;
+    // Diffuse.
+    float diff = saturate(dot(worldNormal, lightDir));
+    float4 diffuseCalc = diff * lightDiffuseColour;
     
-        // Specular.
-        float3 halfwayVector = normalize(lightDir + viewDir);
-        float spec = pow(saturate(dot(worldNormal, halfwayVector)), shininess /*ToDo add Specular Power*/);
-        float4 specularCalc = spec * lightSpecularColour;
+    // Specular.
+    float3 halfwayVector = normalize(lightDir + viewDir);
+    float spec = pow(saturate(dot(worldNormal, halfwayVector)), shininess /*ToDo add Specular Power*/);
+    float4 specularCalc = spec * lightSpecularColour;
         
-        finalCol += (diffuseCalc + specularCalc);
-    }
-    else
-    {
-        softShadowMultiplier = AccumulateSoftShadowHits(64, (float3) lightPosition, attenuationRadius, worldNormal);
-    }
-    
+    finalCol += (diffuseCalc + specularCalc);
     
     payload.colorAndDistance = float4(finalCol * softShadowMultiplier);
 }
