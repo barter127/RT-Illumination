@@ -256,9 +256,9 @@ void DXRSetup::LoadAssets()
 	//copiedObj->update(0);
 
 	DrawableGameObject* pDrawableObject = new DrawableGameObject();
-	pDrawableObject->initMeshFromPath(m_device, "Models/torusKnot.obj");
-	//pDrawableObject->setPosition({ 0.5f, 0.0f, -3.0 });
-	pDrawableObject->setScale({ 0.1f, 0.1f, 0.1f });
+	pDrawableObject->initMeshFromPath(m_device, "Models/Bunny.obj");
+	pDrawableObject->setPosition({ 0.0f, -1.5f, -3.0 });
+	pDrawableObject->setScale({ 0.01f, 0.01f, 0.01f });
 	pDrawableObject->update(0);
 
 	DrawableGameObject* pDrawableObject2 = new DrawableGameObject();

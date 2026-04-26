@@ -43,6 +43,33 @@ float3 SampleSphere(float3 center, float radius)
     return center + dir * radius;
 }
 
+bool TraceShadowRay()
+{
+     // Fire Shadow Ray.
+    RayDesc ray;
+    ray.Origin = HitWorldPosition();
+    ray.Direction = normalize(lightPosition.xyz - ray.Origin);
+    
+    ray.TMin = 0.01;
+    ray.TMax = length(lightPosition.xyz - ray.Origin); // Ensure ray isn't too large.
+    
+    // Init payload.
+    ShadowHitInfo shadowPayload;
+    shadowPayload.isHit = false;
+    
+    TraceRay(
+    SceneBVH, // AS
+    RAY_FLAG_NONE,
+    0xFF, // Instance mask.
+    1, // Hit shader offset.
+    0, // Geometry Stide.
+    1, // Index of miss shader.
+    ray, // Ray info.
+    shadowPayload); // Payload.   
+    
+    return shadowPayload.isHit;
+}
+
 float AccumulateSoftShadowHits(int numRays, float3 lightCentre, float radius, float3 surfaceNormal)
 {
     int hitCount = 0;
