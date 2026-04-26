@@ -255,23 +255,28 @@ void DXRSetup::LoadAssets()
 	//copiedObj->setPosition({ 0.3f, 0.3f, -5.0f });
 	//copiedObj->update(0);
 
-	DrawableGameObject* pDrawableObject = new DrawableGameObject();
-	pDrawableObject->initMeshFromPath(m_device, "Models/Bunny.obj");
-	pDrawableObject->setPosition({ 0.0f, -1.5f, -3.0 });
-	pDrawableObject->setScale({ 0.01f, 0.01f, 0.01f });
-	pDrawableObject->update(0);
+	DrawableGameObject* bunnyOBJ = new DrawableGameObject();
+	bunnyOBJ->initMeshFromPath(m_device, "Models/Bunny.obj");
+	bunnyOBJ->setPosition({ 0.0f, -1.5f, -3.0 });
+	bunnyOBJ->setScale({ 0.01f, 0.01f, 0.01f });
+	bunnyOBJ->update(0);
 
-	DrawableGameObject* pDrawableObject2 = new DrawableGameObject();
-	pDrawableObject2->initMeshFromPath(m_device, "Models/Cube.obj");
-	pDrawableObject2->setScale({ 10.0f, 0.2f, 10.0f });
-	pDrawableObject2->setPosition({ 0.0f, -2.0f, 0.0f });
-	pDrawableObject2->setEulerRotation({ 180.0f, 0.0f, 0.0f });
-	pDrawableObject2->update(0);
+	DrawableGameObject* bunnyCopy = bunnyOBJ->createCopy();
+	bunnyCopy->setPosition({ 2.0f, -1.5f, -3.0 });
+	bunnyCopy->setScale({ 0.01f, 0.01f, 0.01f });
+	bunnyCopy->update(0);
+
+	DrawableGameObject* FloorOBJ = new DrawableGameObject();
+	FloorOBJ->initMeshFromPath(m_device, "Models/Cube.obj");
+	FloorOBJ->setScale({ 10.0f, 0.2f, 10.0f });
+	FloorOBJ->setPosition({ 0.0f, -2.0f, 0.0f });
+	FloorOBJ->setEulerRotation({ 180.0f, 0.0f, 0.0f });
+	FloorOBJ->update(0);
 
 
-	m_app->m_drawableObjects.push_back(pDrawableObject);
-	m_app->m_drawableObjects.push_back(pDrawableObject2);
-	//m_app->m_drawableObjects.push_back(copiedObj);
+	m_app->m_drawableObjects.push_back(bunnyOBJ);
+	m_app->m_drawableObjects.push_back(bunnyCopy);
+	m_app->m_drawableObjects.push_back(FloorOBJ);
 
 	PointLight* light = new PointLight({0.0f, 1.0f, 0.0f, 0.0f },
 		{ 0.2f, 0.2f, 0.2f,1.0f },
@@ -319,9 +324,9 @@ void DXRSetup::CreateAccelerationStructures()
 		CreateBottomLevelAS({ {m_app->m_drawableObjects[1]->getVertexBuffer().Get(), m_app->m_drawableObjects[1]->getVertexCount()} }, 
 			{ {m_app->m_drawableObjects[1]->getIndexBuffer().Get(), m_app->m_drawableObjects[1]->getIndexCount()}});
 
-	// Just one instance for now
 	m_app->m_instances.push_back(std::make_pair(bottomLevelTriBuffers.pResult, m_app->m_drawableObjects[0]->getTransform()));
-	m_app->m_instances.push_back(std::make_pair(bottomLevelPlaneBuffers.pResult, m_app->m_drawableObjects[1]->getTransform()));
+	m_app->m_instances.push_back(std::make_pair(bottomLevelTriBuffers.pResult, m_app->m_drawableObjects[1]->getTransform()));
+	m_app->m_instances.push_back(std::make_pair(bottomLevelPlaneBuffers.pResult, m_app->m_drawableObjects[2]->getTransform()));
 	CreateTopLevelAS(m_app->m_instances, false);
 
 	// Flush the command list and wait for it to finish
@@ -462,7 +467,7 @@ void DXRSetup::CreateRaytracingPipeline()
 	// exchanged between shaders, such as the HitInfo structure in the HLSL code.
 	// It is important to keep this value as low as possible as a too high value
 	// would result in unnecessary memory consumption and cache trashing.
-	pipeline.SetMaxPayloadSize(4 * sizeof(float)); // RGB + distance
+	pipeline.SetMaxPayloadSize(4 * sizeof(float) + sizeof(unsigned int)); // RGB + distance
 
 	// Upon hitting a surface, DXR can provide several attributes to the hit. In
 	// our sample we just use the barycentric coordinates defined by the weights

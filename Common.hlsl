@@ -4,13 +4,14 @@
 // and that its size must be declared in the corresponding
 // D3D12_RAYTRACING_SHADER_CONFIG pipeline subobjet.
 struct HitInfo {
-  float4 colorAndDistance;
+    float4 colorAndDistance;
+    uint recursionDepth;
 };
 
 // Attributes output by the raytracing when hitting a surface,
 // here the barycentric coordinates
 struct Attributes {
-  float2 bary;
+    float2 bary;
 };
 
 // Holds flag to see if object is occluded.

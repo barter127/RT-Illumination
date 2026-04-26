@@ -16,6 +16,9 @@
     <FxCompile Include="Shadow.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="Random.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Win32Application.cpp" />
@@ -82,6 +85,7 @@
       <Filter>DX</Filter>
     </ClCompile>
     <ClCompile Include="Input.cpp" />
+    <ClCompile Include="PointLight.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Win32Application.h" />
@@ -163,6 +167,7 @@
       <Filter>Camera</Filter>
     </ClInclude>
     <ClInclude Include="Input.h" />
+    <ClInclude Include="PointLight.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Shaders">
