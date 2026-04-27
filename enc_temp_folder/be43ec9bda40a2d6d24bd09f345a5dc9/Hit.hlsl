@@ -148,7 +148,7 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     float3 triNormal = HitAttributeFloat3(vertexNormals, attrib);
     float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
     
-    float softShadowMultiplier = AccumulateSoftShadowHits(shadowSampleCount, (float3) lightPosition, attenuationRadius, worldNormal, payload.recursionDepth);
+    float softShadowMultiplier = AccumulateSoftShadowHits(64, (float3) lightPosition, attenuationRadius, worldNormal, payload.recursionDepth);
 
     
     float3 hitPos = HitWorldPosition();

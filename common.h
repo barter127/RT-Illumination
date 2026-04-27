@@ -31,3 +31,9 @@ struct LightBuffer
 	float attenuationRadius;
 	XMFLOAT2 padding;
 };
+
+struct DebugBuffer
+{
+	int shadowSampleCount;
+	XMFLOAT3 padding;
+};

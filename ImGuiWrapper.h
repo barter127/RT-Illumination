@@ -15,5 +15,7 @@ public:
 	void LightPanel(float* ambientCol, float* diffuseCol,
 		float* specularCol, float* specularPower,
 		DirectX::XMFLOAT4& lightDir, float* attenuation);
+
+	void GPUDebugPanel(int* shadowSampleCount);
 };
 

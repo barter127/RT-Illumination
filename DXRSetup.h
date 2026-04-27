@@ -63,6 +63,9 @@ private:
 	void CreateLightBuffer();
 	void UpdateLightBuffer();
 
+	void CreateDebugBuffer();
+	void UpdateDebugBuffer();
+
 	friend DXRRuntime;
 
 };

@@ -55,6 +55,7 @@ void DXRSetup::initialise()
 	constexpr XMFLOAT3 camStartUp = { 0,1,0 };
 	CreateCamera(camStartPos, camStartLookAt, camStartUp);
 	CreateLightBuffer();
+	CreateDebugBuffer();
 
 	// Create the buffer containing the raytracing result (always output in a
 	// UAV), and create the heap referencing the resources used by the raytracing,
@@ -321,8 +322,8 @@ void DXRSetup::CreateAccelerationStructures()
 			{ {m_app->m_drawableObjects[0]->getIndexBuffer().Get(), m_app->m_drawableObjects[0]->getIndexCount()}});
 
 	AccelerationStructureBuffers bottomLevelBunnyBuffers =
-		CreateBottomLevelAS({ {m_app->m_drawableObjects[1]->getVertexBuffer().Get(), m_app->m_drawableObjects[1]->getVertexCount()} }, 
-			{ {m_app->m_drawableObjects[1]->getIndexBuffer().Get(), m_app->m_drawableObjects[1]->getIndexCount()}});
+		CreateBottomLevelAS({ {m_app->m_drawableObjects[1]->getVertexBuffer().Get(), m_app->m_drawableObjects[1]->getVertexCount()} },
+			{ {m_app->m_drawableObjects[1]->getIndexBuffer().Get(), m_app->m_drawableObjects[1]->getIndexCount()} });
 
 	AccelerationStructureBuffers bottomLevelPlaneBuffers =
 		CreateBottomLevelAS({ {m_app->m_drawableObjects[2]->getVertexBuffer().Get(), m_app->m_drawableObjects[2]->getVertexCount()} }, 
@@ -366,10 +367,13 @@ ComPtr<ID3D12RootSignature> DXRSetup::CreateRayGenSignature() {
 		  0 /*heap slot where the UAV is defined*/},
 		 {0 /*t0*/, 1, 0,
 		  D3D12_DESCRIPTOR_RANGE_TYPE_SRV /*Top-level acceleration structure*/,
-		  1}, 
+		  1},
 		 {0 /*b0*/, 1, 0,
 		  D3D12_DESCRIPTOR_RANGE_TYPE_CBV /* Constant buffer view */,
-		  2} });
+		  2}
+		}
+
+		);
 
 	return rsc.Generate(m_device.Get(), true);
 }
@@ -383,6 +387,7 @@ ComPtr<ID3D12RootSignature> DXRSetup::CreateHitSignature() {
 	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_SRV, 0 /*t0*/); // vertex data
 	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_SRV, 1 /*t1*/); // indices
 	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_CBV, 0 /*b0*/); // Lighting
+	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_CBV, 1 /*b1*/); // Debug
 
 	rsc.AddHeapRangesParameter({ { 2 /*t2*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1 /*2nd slot of the heap (see CreateShaderResourceHeap() */ } }); /*Top-level acceleration structure*/
 	return rsc.Generate(m_device.Get(), true);
@@ -617,6 +622,7 @@ void DXRSetup::CreateShaderBindingTable()
 		{ (void*)(m_app->m_drawableObjects[0]->getVertexBuffer()->GetGPUVirtualAddress()),
 			(void*)(m_app->m_drawableObjects[0]->getIndexBuffer()->GetGPUVirtualAddress()),
 			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress()),
+			(void*)(m_app->GetContext()->m_debugBuffer.Get()->GetGPUVirtualAddress()),
 			heapPointer
 		});
 
@@ -625,14 +631,16 @@ void DXRSetup::CreateShaderBindingTable()
 		{ (void*)(m_app->m_drawableObjects[0]->getVertexBuffer()->GetGPUVirtualAddress()),
 			(void*)(m_app->m_drawableObjects[0]->getIndexBuffer()->GetGPUVirtualAddress()),
 			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress()),
+
 			heapPointer
 		});
 
 	// Adding the plane hit shader
-	context->m_sbtHelper.AddHitGroup(L"PlaneHitGroup",
+	context->m_sbtHelper.AddHitGroup(L"HitGroup",
 		{ (void*)(m_app->m_drawableObjects[1]->getVertexBuffer()->GetGPUVirtualAddress()),
 			(void*)(m_app->m_drawableObjects[1]->getIndexBuffer()->GetGPUVirtualAddress()),
 			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress()),
+			(void*)(m_app->GetContext()->m_debugBuffer.Get()->GetGPUVirtualAddress()),
 			heapPointer
 		});
 
@@ -640,6 +648,23 @@ void DXRSetup::CreateShaderBindingTable()
 	context->m_sbtHelper.AddHitGroup(L"ShadowHitGroup",
 		{ (void*)(m_app->m_drawableObjects[1]->getVertexBuffer()->GetGPUVirtualAddress()),
 			(void*)(m_app->m_drawableObjects[1]->getIndexBuffer()->GetGPUVirtualAddress()),
+			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress()),
+			heapPointer
+		});
+
+	// Adding the plane hit shader
+	context->m_sbtHelper.AddHitGroup(L"PlaneHitGroup",
+		{ (void*)(m_app->m_drawableObjects[2]->getVertexBuffer()->GetGPUVirtualAddress()),
+			(void*)(m_app->m_drawableObjects[2]->getIndexBuffer()->GetGPUVirtualAddress()),
+			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress()),
+			(void*)(m_app->GetContext()->m_debugBuffer.Get()->GetGPUVirtualAddress()),
+			heapPointer
+		});
+
+	// Adding the plane shadow hit shader.
+	context->m_sbtHelper.AddHitGroup(L"ShadowHitGroup",
+		{ (void*)(m_app->m_drawableObjects[2]->getVertexBuffer()->GetGPUVirtualAddress()),
+			(void*)(m_app->m_drawableObjects[2]->getIndexBuffer()->GetGPUVirtualAddress()),
 			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress()),
 			heapPointer
 		});
@@ -746,6 +771,39 @@ void DXRSetup::UpdateLightBuffer()
 	context->m_lightBuffer->Unmap(0, nullptr);
 }
 
+void DXRSetup::CreateDebugBuffer()
+{
+	DXRContext* context = m_app->GetContext();
+
+	context->m_debugBufferSize = 256;
+	context->m_debugBuffer = nv_helpers_dx12::CreateBuffer(m_device.Get(),
+		context->m_debugBufferSize,
+		D3D12_RESOURCE_FLAG_NONE,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nv_helpers_dx12::kUploadHeapProps);
+
+	DebugBuffer db = { m_app->m_shadowSampleCount, XMFLOAT3() };
+
+	// Copy data to cb.
+	uint8_t* pData;
+	ThrowIfFailed(context->m_debugBuffer->Map(0, nullptr, (void**)&pData));
+	memcpy(pData, &db, context->m_debugBufferSize);
+	context->m_debugBuffer->Unmap(0, nullptr);
+}
+
+void DXRSetup::UpdateDebugBuffer()
+{
+	DXRContext* context = m_app->GetContext();
+
+	DebugBuffer db = { m_app->m_shadowSampleCount, XMFLOAT3() };
+
+	// Copy data to cb.
+	uint8_t* pData;
+	ThrowIfFailed(context->m_debugBuffer->Map(0, nullptr, (void**)&pData));
+	memcpy(pData, &db, context->m_debugBufferSize);
+	context->m_debugBuffer->Unmap(0, nullptr);
+}
+
 //-----------------------------------------------------------------------------
 //
 // Create a bottom-level acceleration structure based on a list of vertex
@@ -838,7 +896,7 @@ void DXRSetup::CreateTopLevelAS(
 			static_cast<UINT>(0));
 		context->m_topLevelASGenerator.AddInstance(instances[2].first.Get(),
 			instances[2].second, static_cast<UINT>(2),
-			static_cast<UINT>(2));
+			static_cast<UINT>(4));
 
 
 	

@@ -20,6 +20,7 @@ DXRRuntime::DXRRuntime(DXRApp* app)
 	m_ui = new ImGuiWrapper;
 }
 
+
 void DXRRuntime::Render()
 {
 	DXRContext* context = m_app->GetContext();
@@ -40,6 +41,7 @@ void DXRRuntime::Render()
 		&m_app->m_lightVector[0]->m_shininess,
 		m_app->m_lightVector[0]->m_position,
 		&m_app->m_lightVector[0]->m_attenuationRadius);
+	m_ui->GPUDebugPanel(&m_app->m_shadowSampleCount);
 
 	ImGui::End();
 
@@ -71,6 +73,7 @@ void DXRRuntime::Update()
 	m_app->m_DXRContext->m_camera.get()->Update(deltaTime);
 	m_app->m_DXSetup->UpdateCameraBuffer();
 	m_app->m_DXSetup->UpdateLightBuffer();
+	m_app->m_DXSetup->UpdateDebugBuffer();
 
 	int i = 0;
 	for (DrawableGameObject* dgo : m_app->m_drawableObjects)

@@ -147,3 +147,18 @@ void ImGuiWrapper::LightPanel(float* ambientCol, float* diffuseCol,
 
 	ImGui::End();
 }
+
+void ImGuiWrapper::GPUDebugPanel(int* shadowSampleCount)
+{
+	constexpr int minShadowSample = 1;
+	constexpr int maxShadowSample = 256;
+
+
+	ImGui::Begin("GPU Debug");
+
+	ImGui::SliderInt("Shadow Sample Count", shadowSampleCount, minShadowSample, maxShadowSample);
+
+
+	ImGui::End();
+
+}
