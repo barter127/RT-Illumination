@@ -38,7 +38,8 @@ void DXRRuntime::Render()
 		&m_app->m_lightVector[0]->m_diffuseColour.x,
 		&m_app->m_lightVector[0]->m_specularColour.x,
 		&m_app->m_lightVector[0]->m_shininess,
-		m_app->m_lightVector[0]->m_position);
+		m_app->m_lightVector[0]->m_position,
+		&m_app->m_lightVector[0]->m_attenuationRadius);
 
 	ImGui::End();
 

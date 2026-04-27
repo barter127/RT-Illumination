@@ -114,12 +114,15 @@ void ImGuiWrapper::DrawVec3Control(string displayString, XMFLOAT3& vector, int b
 
 void ImGuiWrapper::LightPanel(float* ambientCol, float* diffuseCol,
 	float* specularCol, float* specularPower,
-	XMFLOAT4& lightDir)
+	XMFLOAT4& lightDir, float* attenuation)
 {
 	constexpr int resetToZero = 0;
 
 	constexpr float minSpecPower = 1.0f;
 	constexpr float maxSpecPower = 64.0f;
+
+	constexpr float minAttenuation = 1.0f;
+	constexpr float maxAttenuation = 32.0f;
 
 	ImGui::Begin("Edit Light");
 
@@ -140,6 +143,7 @@ void ImGuiWrapper::LightPanel(float* ambientCol, float* diffuseCol,
 	DrawVec3Control("Direction", lightDir3, 75.0f, 60.0f,resetToZero);
 	lightDir.x = lightDir3.x; lightDir.y = lightDir3.y; lightDir.z = lightDir3.z;
 
+	ImGui::SliderFloat("Attenuation", attenuation, minAttenuation, maxAttenuation, "%.1f");
 
 	ImGui::End();
 }

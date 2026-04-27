@@ -320,12 +320,16 @@ void DXRSetup::CreateAccelerationStructures()
 		CreateBottomLevelAS({ {m_app->m_drawableObjects[0]->getVertexBuffer().Get(), m_app->m_drawableObjects[0]->getVertexCount()} }, 
 			{ {m_app->m_drawableObjects[0]->getIndexBuffer().Get(), m_app->m_drawableObjects[0]->getIndexCount()}});
 
-	AccelerationStructureBuffers bottomLevelPlaneBuffers =
+	AccelerationStructureBuffers bottomLevelBunnyBuffers =
 		CreateBottomLevelAS({ {m_app->m_drawableObjects[1]->getVertexBuffer().Get(), m_app->m_drawableObjects[1]->getVertexCount()} }, 
 			{ {m_app->m_drawableObjects[1]->getIndexBuffer().Get(), m_app->m_drawableObjects[1]->getIndexCount()}});
 
+	AccelerationStructureBuffers bottomLevelPlaneBuffers =
+		CreateBottomLevelAS({ {m_app->m_drawableObjects[2]->getVertexBuffer().Get(), m_app->m_drawableObjects[2]->getVertexCount()} }, 
+			{ {m_app->m_drawableObjects[2]->getIndexBuffer().Get(), m_app->m_drawableObjects[2]->getIndexCount()}});
+
 	m_app->m_instances.push_back(std::make_pair(bottomLevelTriBuffers.pResult, m_app->m_drawableObjects[0]->getTransform()));
-	m_app->m_instances.push_back(std::make_pair(bottomLevelTriBuffers.pResult, m_app->m_drawableObjects[1]->getTransform()));
+	m_app->m_instances.push_back(std::make_pair(bottomLevelBunnyBuffers.pResult, m_app->m_drawableObjects[1]->getTransform()));
 	m_app->m_instances.push_back(std::make_pair(bottomLevelPlaneBuffers.pResult, m_app->m_drawableObjects[2]->getTransform()));
 	CreateTopLevelAS(m_app->m_instances, false);
 
@@ -831,6 +835,9 @@ void DXRSetup::CreateTopLevelAS(
 			static_cast<UINT>(0));
 		context->m_topLevelASGenerator.AddInstance(instances[1].first.Get(),
 			instances[1].second, static_cast<UINT>(1),
+			static_cast<UINT>(0));
+		context->m_topLevelASGenerator.AddInstance(instances[2].first.Get(),
+			instances[2].second, static_cast<UINT>(2),
 			static_cast<UINT>(2));
 
 
