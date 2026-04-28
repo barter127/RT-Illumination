@@ -1,6 +1,6 @@
-static uint state = 27689287542;
+static uint state = 48120458218528508;
 
-// I "stole" these functions for Sebastian Lague and he stole these functions from stack overflow.
+// I "stole" these functions for Sebastian Lague and he "stole" these functions from stack overflow.
 
 float RandomValue(inout uint state)
 {

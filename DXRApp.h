@@ -71,7 +71,7 @@ private:
 
 	vecDrawables m_drawableObjects;
 	std::vector<PointLight*> m_lightVector;
-	int m_shadowSampleCount = 64;
+	int m_shadowSampleCount = 128;
 
 	static bool m_rMouseDown;
 	static bool m_lMouseDown;

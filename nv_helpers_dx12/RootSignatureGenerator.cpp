@@ -154,8 +154,9 @@ void RootSignatureGenerator::AddRootParameter(D3D12_ROOT_PARAMETER_TYPE type,
 //--------------------------------------------------------------------------------------------------
 //
 // Create the root signature from the set of parameters, in the order of the addition calls
-ID3D12RootSignature* RootSignatureGenerator::Generate(ID3D12Device* device, bool isLocal)
+ID3D12RootSignature* RootSignatureGenerator::Generate(ID3D12Device* device, bool isLocal, UINT numSamplers, D3D12_STATIC_SAMPLER_DESC* sampler)
 {
+
   // Go through all the parameters, and set the actual addresses of the heap range descriptors based
   // on their indices in the range set array
   for (size_t i = 0; i < m_parameters.size(); i++)
@@ -190,6 +191,12 @@ ID3D12RootSignature* RootSignatureGenerator::Generate(ID3D12Device* device, bool
   {
     throw std::logic_error("Cannot create root signature");
   }
+
+    if (numSamplers > 0)
+    {
+        rootDesc.NumStaticSamplers = numSamplers;
+        rootDesc.pStaticSamplers = sampler;
+    }
   return pRootSig;
 }
 

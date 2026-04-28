@@ -1,7 +1,7 @@
 #include "Common.hlsl"
 #include "Random.hlsl"
 
-#define MAX_RAY_RECURSION_DEPTH 2
+#define MAX_RAY_RECURSION_DEPTH 8
 
 struct STriVertex
 { // IMPORTANT - the c++ version of this is 'Vertex' found in the common.h file
@@ -12,8 +12,10 @@ struct STriVertex
 
 StructuredBuffer<STriVertex> BTriVertex : register(t0);
 StructuredBuffer<int> indices : register(t1);
+RaytracingAccelerationStructure SceneBVH : register(t3);
+Texture2D<float4> g_texture : register(t2);
 
-RaytracingAccelerationStructure SceneBVH : register(t2);
+SamplerState g_sampler : register(s0);
 
 cbuffer LightParams : register(b0)
 {
@@ -40,6 +42,14 @@ float3 HitAttributeFloat3(float3 vertexAttribute[3], Attributes attrib)
     return Point;
 }
 
+float2 HitAttributeFloat2(float2 vertexAttribute[3], Attributes attrib)
+{
+    float3 barycentrics = float3(1.0f - attrib.bary.x - attrib.bary.y, attrib.bary.x, attrib.bary.y);
+    float2 Point = vertexAttribute[0] * barycentrics.x + vertexAttribute[1] * barycentrics.y + vertexAttribute[2] * barycentrics.z;
+    
+    return Point;
+}
+
 float3 HitWorldPosition()
 {
     return WorldRayOrigin() + RayTCurrent() * WorldRayDirection();
@@ -51,10 +61,12 @@ float3 SampleSphere(float3 center, float radius)
     return center + dir * radius;
 }
 
-float AccumulateSoftShadowHits(int numRays, float3 lightCentre, float radius, float3 surfaceNormal, uint recursionDepth)
+float AccumulateSoftShadowHits(int numRays, float3 lightCentre, float radius, float3 surfaceNormal, in uint recursionDepth)
 {
     if (recursionDepth > MAX_RAY_RECURSION_DEPTH)
         return 1.0f;
+    
+    recursionDepth++;
     
     int hitCount = 0;
     
@@ -64,8 +76,10 @@ float AccumulateSoftShadowHits(int numRays, float3 lightCentre, float radius, fl
         RayDesc ray;
         ray.Origin = HitWorldPosition();
         
+        // Get a random point within the sphere.
         float3 targetPos = SampleSphere(lightCentre, radius);
-        float3 direction = normalize(targetPos + surfaceNormal);
+        
+        float3 direction = normalize(targetPos - ray.Origin);
 
         
         ray.Direction = direction;
@@ -93,7 +107,7 @@ float AccumulateSoftShadowHits(int numRays, float3 lightCentre, float radius, fl
         }
     }
     
-    return clamp(1 - ((float) hitCount / (float)numRays), 0.4, 1);
+    return 1.0 - ((float) hitCount / (float)numRays);
 }
 
 float4 TraceRadianceRay(in RayDesc ray, in uint currentRayRecursionDepth)
@@ -102,6 +116,7 @@ float4 TraceRadianceRay(in RayDesc ray, in uint currentRayRecursionDepth)
     {
         return float4(0, 0, 0, 0);
     }
+    currentRayRecursionDepth++;
     
     // Fire Reflection Ray.
     RayDesc reflectRay;
@@ -134,6 +149,11 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
 {
     uint vertID = 3 * PrimitiveIndex();
     
+    float2 vertexUV[3];
+    vertexUV[0] = BTriVertex[indices[vertID + 0]].texcoord.xy;
+    vertexUV[1] = BTriVertex[indices[vertID + 1]].texcoord.xy;
+    vertexUV[2] = BTriVertex[indices[vertID + 2]].texcoord.xy;
+    
     float3 vertexNormals[3];
     
     vertexNormals[0] = BTriVertex[indices[vertID + 0]].normal.xyz;
@@ -144,6 +164,8 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     
     float4 finalCol = ambientCalc;
     float attenuation = 1.0f;
+    
+    float2 triTexCoord = HitAttributeFloat2(vertexUV, attrib);
     
     float3 triNormal = HitAttributeFloat3(vertexNormals, attrib);
     float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
@@ -166,18 +188,19 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     float3 halfwayVector = normalize(lightDir + viewDir);
     float spec = pow(saturate(dot(worldNormal, halfwayVector)), shininess);
     float4 specularCalc = spec * lightSpecularColour;
-        
+       
+    // Multiplying shadows here instead of at the end looks nicer as it keeps the ambient value.
     finalCol += (diffuseCalc + specularCalc) * softShadowMultiplier;
     
+    // Calculate and apply reflection colour. TODO: Add some sort of value to tweak it. Maybe I could sample textures later too :D
     RayDesc ray;
     ray.Origin = HitWorldPosition();
     ray.Direction = reflect(WorldRayDirection(), worldNormal);
-    
     float4 reflectionColour =  TraceRadianceRay(ray, payload.recursionDepth);
     
     finalCol += reflectionColour;
     
-    payload.colorAndDistance = float4(finalCol);
+    payload.colorAndDistance = g_texture.SampleLevel(g_sampler, triTexCoord, 0);
 }
 
 [shader("closesthit")]
@@ -185,8 +208,13 @@ void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
 {
     uint vertID = 3 * PrimitiveIndex();
     
-    float3 vertexNormals[3];
+    // I need to make this a function.
+    float2 vertexUV[3];
+    vertexUV[0] = BTriVertex[indices[vertID + 0]].texcoord.xy;
+    vertexUV[1] = BTriVertex[indices[vertID + 1]].texcoord.xy;
+    vertexUV[2] = BTriVertex[indices[vertID + 2]].texcoord.xy;
     
+    float3 vertexNormals[3];
     vertexNormals[0] = BTriVertex[indices[vertID + 0]].normal.xyz;
     vertexNormals[1] = BTriVertex[indices[vertID + 1]].normal.xyz;
     vertexNormals[2] = BTriVertex[indices[vertID + 2]].normal.xyz;
@@ -195,6 +223,8 @@ void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
     
     float4 finalCol = ambientCalc;
     float attenuation = 1.0f;
+    
+    float2 triTexCoord = HitAttributeFloat2(vertexUV, attrib);
     
     float3 triNormal = HitAttributeFloat3(vertexNormals, attrib);
     float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
@@ -219,5 +249,6 @@ void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
         
     finalCol += (diffuseCalc + specularCalc) * softShadowMultiplier;
     
-    payload.colorAndDistance = float4(finalCol);
+    payload.colorAndDistance = 
+    float4(0,0,0,0);
 }

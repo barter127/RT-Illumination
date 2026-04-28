@@ -86,6 +86,7 @@
     </ClCompile>
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="PointLight.cpp" />
+    <ClCompile Include="TextureLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Win32Application.h" />
@@ -168,6 +169,7 @@
     </ClInclude>
     <ClInclude Include="Input.h" />
     <ClInclude Include="PointLight.h" />
+    <ClInclude Include="TextureLoader.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Shaders">
