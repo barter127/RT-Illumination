@@ -291,7 +291,7 @@ void DXRSetup::LoadAssets()
 	TextureLoader tl;
 	int imageBytesPerRow;
 	BYTE* imageData;
-	int imageSize = tl.LoadImageDataFromFile(&imageData, context->m_textureDesc, L"test.png",
+	int imageSize = tl.LoadImageDataFromFile(&imageData, context->m_textureDesc, L"Models/DefaultMaterial.png",
 		imageBytesPerRow);
 	// make sure we have data
 	if (imageSize <= 0)
@@ -435,9 +435,9 @@ ComPtr<ID3D12RootSignature> DXRSetup::CreateHitSignature() {
 
 	D3D12_STATIC_SAMPLER_DESC sampler = {};
 	sampler.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT;
-	sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-	sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-	sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+	sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	sampler.MipLODBias = 0;
 	sampler.MaxAnisotropy = 0;
 	sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;

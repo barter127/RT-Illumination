@@ -153,20 +153,24 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     vertexUV[1] = BTriVertex[indices[vertID + 1]].texcoord.xy;
     vertexUV[2] = BTriVertex[indices[vertID + 2]].texcoord.xy;
     
+    vertexUV[0].y *= -1;
+    vertexUV[1].y *= -1;
+    vertexUV[2].y *= -1;
+    
     float3 vertexNormals[3];
     vertexNormals[0] = BTriVertex[indices[vertID + 0]].normal.xyz;
     vertexNormals[1] = BTriVertex[indices[vertID + 1]].normal.xyz;
     vertexNormals[2] = BTriVertex[indices[vertID + 2]].normal.xyz;
     
+    float2 triTexCoord = HitAttributeFloat2(vertexUV, attrib);
+    
+    float3 triNormal = HitAttributeFloat3(vertexNormals, attrib);
+    float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
     float4 ambientCalc = lightAmbientColour;
     
     float4 finalCol = ambientCalc;
     float attenuation = 1.0f;
     
-    float2 triTexCoord = HitAttributeFloat2(vertexUV, attrib);
-    
-    float3 triNormal = HitAttributeFloat3(vertexNormals, attrib);
-    float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
     
     float softShadowMultiplier = AccumulateSoftShadowHits(shadowSampleCount, (float3) lightPosition, attenuationRadius, worldNormal, payload.recursionDepth);
 
@@ -202,7 +206,7 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     
     
     
-    payload.colorAndDistance = finalCol;
+    payload.colorAndDistance = finalCol + g_texture.SampleLevel(g_sampler, triTexCoord, 0);
     // payload.colorAndDistance = g_texture.SampleLevel(g_sampler, triTexCoord, 0);
 }
 
@@ -216,6 +220,10 @@ void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
     vertexUV[0] = BTriVertex[indices[vertID + 0]].texcoord.xy;
     vertexUV[1] = BTriVertex[indices[vertID + 1]].texcoord.xy;
     vertexUV[2] = BTriVertex[indices[vertID + 2]].texcoord.xy;
+    
+    vertexUV[0].y *= -1;
+    vertexUV[1].y *= -1;
+    vertexUV[2].y *= -1;
     
     float3 vertexNormals[3];
     vertexNormals[0] = BTriVertex[indices[vertID + 0]].normal.xyz;
