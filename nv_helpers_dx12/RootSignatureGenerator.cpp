@@ -175,6 +175,12 @@ ID3D12RootSignature* RootSignatureGenerator::Generate(ID3D12Device* device, bool
   rootDesc.Flags =
       isLocal ? D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE : D3D12_ROOT_SIGNATURE_FLAG_NONE;
 
+  if (numSamplers > 0)
+  {
+      rootDesc.NumStaticSamplers = numSamplers;
+      rootDesc.pStaticSamplers = sampler;
+  }
+
   // Create the root signature from its descriptor
   ID3DBlob* pSigBlob;
   ID3DBlob* pErrorBlob;
@@ -192,11 +198,6 @@ ID3D12RootSignature* RootSignatureGenerator::Generate(ID3D12Device* device, bool
     throw std::logic_error("Cannot create root signature");
   }
 
-    if (numSamplers > 0)
-    {
-        rootDesc.NumStaticSamplers = numSamplers;
-        rootDesc.pStaticSamplers = sampler;
-    }
   return pRootSig;
 }
 

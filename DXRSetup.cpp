@@ -288,6 +288,46 @@ void DXRSetup::LoadAssets()
 
 	m_app->m_lightVector.push_back(light);
 
+	TextureLoader tl;
+	int imageBytesPerRow;
+	BYTE* imageData;
+	int imageSize = tl.LoadImageDataFromFile(&imageData, context->m_textureDesc, L"Models/DefaultMaterial.png",
+		imageBytesPerRow);
+	// make sure we have data
+	if (imageSize <= 0)
+	{
+		// Texture failed to load.
+		assert(0);
+	}
+	ThrowIfFailed(m_device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		D3D12_HEAP_FLAG_NONE,
+		&context->m_textureDesc,
+		D3D12_RESOURCE_STATE_COPY_DEST,
+		nullptr,
+		IID_PPV_ARGS(&context->m_texture)));
+
+	// CREATE AN UPLOAD HEAP
+	const UINT64 uploadBufferSize = GetRequiredIntermediateSize(context -> m_texture.Get(), 0, 1);
+	// Create the GPU upload buffer.
+	ThrowIfFailed(m_device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+		D3D12_HEAP_FLAG_NONE,
+		&CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize),
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&context->m_textureUploadHeap)));
+
+	// SCHEDULE A COPY FROM THE UPLOAD HEAP TO THE DEFAULT HEAP TEXTURE
+	D3D12_SUBRESOURCE_DATA textureData = {};
+	textureData.pData = imageData;
+	textureData.RowPitch = imageBytesPerRow;
+	textureData.SlicePitch = textureData.RowPitch * context->m_textureDesc.Height;
+	UpdateSubresources(context->m_commandList.Get(), context->m_texture.Get(), context -> m_textureUploadHeap.Get(), 0, 0, 1, &textureData);
+	context->m_commandList->ResourceBarrier(1,
+	&CD3DX12_RESOURCE_BARRIER::Transition(context->m_texture.Get(),
+		D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+
 	// Create synchronization objects and wait until assets have been uploaded to
 	// the GPU.
 	{
@@ -390,8 +430,8 @@ ComPtr<ID3D12RootSignature> DXRSetup::CreateHitSignature() {
 	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_CBV, 0 /*b0*/); // Lighting
 	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_CBV, 1 /*b1*/); // Debug
 
-	rsc.AddHeapRangesParameter({ { 2 /*t2*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1 /*2nd slot of the heap (see CreateShaderResourceHeap() */ } }); /*Top-level acceleration structure*/
-	rsc.AddHeapRangesParameter({ { 3 /*t3*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3 /*4th slot of the heap (see CreateShaderResourceHeap() */ } }); /*Texture*/
+	rsc.AddHeapRangesParameter({ { 3 /*t3*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1 /*2nd slot of the heap (see CreateShaderResourceHeap() */ } }); /*Top-level acceleration structure*/
+	rsc.AddHeapRangesParameter({ { 2 /*t2*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3 /*4th slot of the heap (see CreateShaderResourceHeap() */ } }); /*Texture*/
 
 	D3D12_STATIC_SAMPLER_DESC sampler = {};
 	sampler.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT;
@@ -514,8 +554,7 @@ void DXRSetup::CreateRaytracingPipeline()
 
 	// Cast the state object into a properties object, allowing to later access
 	// the shader pointers by name
-	ThrowIfFailed(
-		context->m_rtStateObject->QueryInterface(IID_PPV_ARGS(&context->m_rtStateObjectProps)));
+	ThrowIfFailed(context->m_rtStateObject->QueryInterface(IID_PPV_ARGS(&context->m_rtStateObjectProps)));
 }
 
 //-----------------------------------------------------------------------------
@@ -598,6 +637,16 @@ void DXRSetup::CreateShaderResourceHeap()
 	cbvDesc.SizeInBytes = context->m_cameraBufferSize;
 	m_device->CreateConstantBufferView(&cbvDesc, srvHandle);
 
+	// 4a. Add the texture shader resource view after the Camera (increment the handle so it is after the constant buffer view)
+	srvHandle.ptr += m_device -> GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+	// 4b. Describe and create a SRV for the texture.
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDescTex = {};
+	srvDescTex.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDescTex.Format = context->m_textureDesc.Format;
+	srvDescTex.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDescTex.Texture2D.MipLevels = 1;
+	m_device->CreateShaderResourceView(context->m_texture.Get(), &srvDescTex,srvHandle);
 }
 
 //-----------------------------------------------------------------------------
@@ -642,6 +691,7 @@ void DXRSetup::CreateShaderBindingTable()
 			(void*)(m_app->m_drawableObjects[0]->getIndexBuffer()->GetGPUVirtualAddress()),
 			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress()),
 			(void*)(m_app->GetContext()->m_debugBuffer.Get()->GetGPUVirtualAddress()),
+			(void*)(m_app->GetContext()->m_texture.Get()->GetGPUVirtualAddress()),
 			heapPointer
 		});
 
@@ -660,6 +710,7 @@ void DXRSetup::CreateShaderBindingTable()
 			(void*)(m_app->m_drawableObjects[1]->getIndexBuffer()->GetGPUVirtualAddress()),
 			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress()),
 			(void*)(m_app->GetContext()->m_debugBuffer.Get()->GetGPUVirtualAddress()),
+			(void*)(m_app->GetContext()->m_texture.Get()->GetGPUVirtualAddress()),
 			heapPointer
 		});
 
@@ -677,6 +728,7 @@ void DXRSetup::CreateShaderBindingTable()
 			(void*)(m_app->m_drawableObjects[2]->getIndexBuffer()->GetGPUVirtualAddress()),
 			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress()),
 			(void*)(m_app->GetContext()->m_debugBuffer.Get()->GetGPUVirtualAddress()),
+			(void*)(m_app->GetContext()->m_texture.Get()->GetGPUVirtualAddress()),
 			heapPointer
 		});
 
