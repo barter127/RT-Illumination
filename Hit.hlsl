@@ -12,8 +12,7 @@ struct STriVertex
 
 StructuredBuffer<STriVertex> BTriVertex : register(t0);
 StructuredBuffer<int> indices : register(t1);
-RaytracingAccelerationStructure SceneBVH : register(t3);
-Texture2D<float4> g_texture : register(t2);
+RaytracingAccelerationStructure SceneBVH : register(t2);
 
 SamplerState g_sampler : register(s0);
 
@@ -200,7 +199,9 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     
     finalCol += reflectionColour;
     
-    payload.colorAndDistance = g_texture.SampleLevel(g_sampler, triTexCoord, 0);
+    payload.colorAndDistance = finalCol;
+    
+    //payload.colorAndDistance = g_texture.SampleLevel(g_sampler, triTexCoord, 0);
 }
 
 [shader("closesthit")]
