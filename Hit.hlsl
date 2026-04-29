@@ -154,7 +154,6 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     vertexUV[2] = BTriVertex[indices[vertID + 2]].texcoord.xy;
     
     float3 vertexNormals[3];
-    
     vertexNormals[0] = BTriVertex[indices[vertID + 0]].normal.xyz;
     vertexNormals[1] = BTriVertex[indices[vertID + 1]].normal.xyz;
     vertexNormals[2] = BTriVertex[indices[vertID + 2]].normal.xyz;
@@ -188,19 +187,23 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     float spec = pow(saturate(dot(worldNormal, halfwayVector)), shininess);
     float4 specularCalc = spec * lightSpecularColour;
        
-    // Multiplying shadows here instead of at the end looks nicer as it keeps the ambient value.
-    finalCol += (diffuseCalc + specularCalc) * softShadowMultiplier;
-    
     // Calculate and apply reflection colour. TODO: Add some sort of value to tweak it. Maybe I could sample textures later too :D
     RayDesc ray;
     ray.Origin = HitWorldPosition();
     ray.Direction = reflect(WorldRayDirection(), worldNormal);
     float4 reflectionColour =  TraceRadianceRay(ray, payload.recursionDepth);
     
-    finalCol += reflectionColour;
+    // === Accumulate all light data.
     
-    // payload.colorAndDistance = finalCol;
-    payload.colorAndDistance = g_texture.SampleLevel(g_sampler, triTexCoord, 0);
+    // Multiplying shadows here instead of at the end looks nicer as it keeps the ambient value.
+    finalCol += (diffuseCalc + specularCalc) * softShadowMultiplier;
+    finalCol += reflectionColour;
+    finalCol *= attenuation;
+    
+    
+    
+    payload.colorAndDistance = finalCol;
+    // payload.colorAndDistance = g_texture.SampleLevel(g_sampler, triTexCoord, 0);
 }
 
 [shader("closesthit")]
@@ -248,6 +251,7 @@ void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
     float4 specularCalc = spec * lightSpecularColour;
         
     finalCol += (diffuseCalc + specularCalc) * softShadowMultiplier;
+    finalCol *= attenuation;
     
-    payload.colorAndDistance = finalCol;
+    payload.colorAndDistance = finalCol + g_texture.SampleLevel(g_sampler, triTexCoord, 0);
 }

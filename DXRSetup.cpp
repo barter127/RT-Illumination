@@ -291,7 +291,7 @@ void DXRSetup::LoadAssets()
 	TextureLoader tl;
 	int imageBytesPerRow;
 	BYTE* imageData;
-	int imageSize = tl.LoadImageDataFromFile(&imageData, context->m_textureDesc, L"Models/DefaultMaterial.png",
+	int imageSize = tl.LoadImageDataFromFile(&imageData, context->m_textureDesc, L"test.png",
 		imageBytesPerRow);
 	// make sure we have data
 	if (imageSize <= 0)
