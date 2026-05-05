@@ -66,6 +66,9 @@ private:
 	void CreateDebugBuffer();
 	void UpdateDebugBuffer();
 
+	void LoadTextureFromPath(LPCWSTR path, DXRContext* context, int texArrayIndex);
+	void CreateTextureUploadHeap(D3D12_CPU_DESCRIPTOR_HANDLE srvHandle, DXRContext* context, int texArrayIndex);
+
 	friend DXRRuntime;
 
 };

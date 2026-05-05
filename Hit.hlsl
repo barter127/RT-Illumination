@@ -12,9 +12,9 @@ struct STriVertex
 
 StructuredBuffer<STriVertex> BTriVertex : register(t0);
 StructuredBuffer<int> indices : register(t1);
-Texture2D<float4> g_texture : register(t2);
+RaytracingAccelerationStructure SceneBVH : register(t2);
+Texture2D<float4> g_texture : register(t3);
 SamplerState g_sampler : register(s0);
-RaytracingAccelerationStructure SceneBVH : register(t3);
 
 cbuffer LightParams : register(b0)
 {
@@ -195,7 +195,7 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     RayDesc ray;
     ray.Origin = HitWorldPosition();
     ray.Direction = reflect(WorldRayDirection(), worldNormal);
-    float4 reflectionColour =  TraceRadianceRay(ray, payload.recursionDepth);
+    float4 reflectionColour = TraceRadianceRay(ray, payload.recursionDepth);
     
     // === Accumulate all light data.
     
@@ -206,8 +206,8 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     
     
     
+    //payload.colorAndDistance = finalCol ;
     payload.colorAndDistance = finalCol + g_texture.SampleLevel(g_sampler, triTexCoord, 0);
-    // payload.colorAndDistance = g_texture.SampleLevel(g_sampler, triTexCoord, 0);
 }
 
 [shader("closesthit")]

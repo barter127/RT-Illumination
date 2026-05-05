@@ -6,6 +6,7 @@
 #include "nv_helpers_dx12/ShaderBindingTableGenerator.h"
 #include "common.h"
 #include <memory>
+#include <array>
 
 class DebugCamera;
 
@@ -30,8 +31,8 @@ class DXRContext
 	uint32_t m_debugBufferSize;
 
 	// == Texture ===
-	ComPtr<ID3D12Resource> m_textureUploadHeap;
-	ComPtr<ID3D12Resource> m_texture;
+	std::array<ComPtr<ID3D12Resource>, 3> m_texUploadHeapArray;
+	std::array<ComPtr<ID3D12Resource>, 3> m_texArray;
 	D3D12_RESOURCE_DESC m_textureDesc;
 
 	ComPtr<ID3D12DescriptorHeap> m_IMGUIDescHeap;
