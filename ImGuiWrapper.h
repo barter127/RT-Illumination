@@ -16,6 +16,6 @@ public:
 		float* specularCol, float* specularPower,
 		DirectX::XMFLOAT4& lightDir, float* attenuation);
 
-	void GPUDebugPanel(int* shadowSampleCount);
+	void GPUDebugPanel(int* shadowSampleCount, float* matAlbedo, float* matRoughness, float* matMetalness);
 };
 

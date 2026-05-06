@@ -19,6 +19,7 @@
     <FxCompile Include="Random.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="BRDF.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Win32Application.cpp" />

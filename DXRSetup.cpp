@@ -789,7 +789,7 @@ void DXRSetup::CreateDebugBuffer()
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nv_helpers_dx12::kUploadHeapProps);
 
-	DebugBuffer db = { m_app->m_shadowSampleCount, XMFLOAT3() };
+	DebugBuffer db = { m_app->m_shadowSampleCount, m_app->m_materialAlbedo, m_app->m_materialRoughness, m_app->m_materialMetalness};
 
 	// Copy data to cb.
 	uint8_t* pData;
@@ -802,7 +802,7 @@ void DXRSetup::UpdateDebugBuffer()
 {
 	DXRContext* context = m_app->GetContext();
 
-	DebugBuffer db = { m_app->m_shadowSampleCount, XMFLOAT3() };
+	DebugBuffer db = { m_app->m_shadowSampleCount, m_app->m_materialAlbedo, m_app->m_materialRoughness, m_app->m_materialMetalness};
 
 	// Copy data to cb.
 	uint8_t* pData;

@@ -72,6 +72,9 @@ private:
 	vecDrawables m_drawableObjects;
 	std::vector<PointLight*> m_lightVector;
 	int m_shadowSampleCount = 128;
+	float m_materialAlbedo;
+	float m_materialRoughness;
+	float m_materialMetalness;
 
 	static bool m_rMouseDown;
 	static bool m_lMouseDown;

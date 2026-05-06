@@ -35,5 +35,7 @@ struct LightBuffer
 struct DebugBuffer
 {
 	int shadowSampleCount;
-	XMFLOAT3 padding;
+	float materialAlbedo;
+	float materialRoughness;
+	float materialMetalness;
 };

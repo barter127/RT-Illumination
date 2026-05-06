@@ -31,8 +31,6 @@ void DXRRuntime::Render()
 	ImGui::NewFrame();
 	//ImGui::ShowDemoWindow(); // Show demo window
 	bool resize = true;
-	ImGui::Begin("DXR Path Tracer", &resize);
-	ImGui::Text("ImGUI version: (%s)", IMGUI_VERSION);
 
 	m_ui->TransformPanel(*m_app->m_drawableObjects[0]);
 	m_ui->LightPanel(&m_app->m_lightVector[0]->m_ambientColour.x,
@@ -41,9 +39,10 @@ void DXRRuntime::Render()
 		&m_app->m_lightVector[0]->m_shininess,
 		m_app->m_lightVector[0]->m_position,
 		&m_app->m_lightVector[0]->m_attenuationRadius);
-	m_ui->GPUDebugPanel(&m_app->m_shadowSampleCount);
-
-	ImGui::End();
+	m_ui->GPUDebugPanel(&m_app->m_shadowSampleCount,
+		&m_app->m_materialAlbedo,
+		&m_app->m_materialRoughness,
+		&m_app->m_materialMetalness);
 
 	// Record all the commands we need to render the scene into the command list.
 	PopulateCommandList();
