@@ -6,11 +6,31 @@
 using namespace DirectX;
 using namespace std;
 
-void ImGuiWrapper::TransformPanel(DrawableGameObject& object)
+void ImGuiWrapper::TransformPanel(DrawableGameObject& object, int& index, int objCount)
 {
 	ImGui::Begin("Transform");
 
-	int index = 0;
+	float lineHeight = ImGui::GetFontSize() + ImGui::GetStyle().FramePadding.y * 2.0f;
+	ImVec2 buttonSize = { lineHeight + 3.0f, lineHeight };
+	
+	
+
+	if (ImGui::Button("<", buttonSize))
+	{
+		index--; 
+
+		if (index < 0)
+			index = objCount - 1;
+	}
+
+	ImGui::SameLine();
+
+	if (ImGui::Button(">", buttonSize))
+	{
+		index++; 
+		index = index % objCount;
+	}
+
 
 	DrawVec3Control("Position", object.m_position, 75.0f, 60.0f, 0);
 	DrawVec3Control("Rotation", object.m_eulerRotation, 75.0f, 60.0f, 0);

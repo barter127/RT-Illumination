@@ -20,7 +20,6 @@ DXRRuntime::DXRRuntime(DXRApp* app)
 	m_ui = new ImGuiWrapper;
 }
 
-
 void DXRRuntime::Render()
 {
 	DXRContext* context = m_app->GetContext();
@@ -34,7 +33,7 @@ void DXRRuntime::Render()
 	ImGui::Begin("DXR Path Tracer", &resize);
 	ImGui::Text("ImGUI version: (%s)", IMGUI_VERSION);
 
-	m_ui->TransformPanel(*m_app->m_drawableObjects[0]);
+	m_ui->TransformPanel(*m_app->m_drawableObjects[m_currentObjIndex], m_currentObjIndex, m_app->m_drawableObjects.size());
 	m_ui->LightPanel(&m_app->m_lightVector[0]->m_ambientColour.x,
 		&m_app->m_lightVector[0]->m_diffuseColour.x,
 		&m_app->m_lightVector[0]->m_specularColour.x,

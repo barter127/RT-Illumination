@@ -8,6 +8,8 @@ private:
 	ComPtr<ID3D12Device5> m_device;
 	DXRApp* m_app;
 
+	int m_currentObjIndex;
+
 private:
 	void PopulateCommandList();
 

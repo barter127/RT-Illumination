@@ -8,7 +8,7 @@
 class ImGuiWrapper
 {
 public:
-	void TransformPanel(DrawableGameObject& object);
+	void TransformPanel(DrawableGameObject& object, int& index, int objectCount);
 
 	void DrawVec3Control(std::string displayString, DirectX::XMFLOAT3& vector, int barWidth, int columnWidth, int resetTo);
 
