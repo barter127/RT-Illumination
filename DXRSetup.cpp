@@ -646,18 +646,11 @@ void DXRSetup::CreateShaderBindingTable()
 			(void*)(m_app->m_drawableObjects[0]->getIndexBuffer()->GetGPUVirtualAddress()),
 			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress()),
 			(void*)(m_app->GetContext()->m_debugBuffer.Get()->GetGPUVirtualAddress()),
-			(void*)(m_app->GetContext()->m_texArray[0].Get()->GetGPUVirtualAddress()),
 			heapPointer
 		});
 
 	// Adding Shadow Hit Group.
-	context->m_sbtHelper.AddHitGroup(L"ShadowHitGroup",
-		{ (void*)(m_app->m_drawableObjects[0]->getVertexBuffer()->GetGPUVirtualAddress()),
-			(void*)(m_app->m_drawableObjects[0]->getIndexBuffer()->GetGPUVirtualAddress()),
-			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress()),
-
-			heapPointer
-		});
+	context->m_sbtHelper.AddHitGroup(L"ShadowHitGroup", {});
 
 	// Adding the plane hit shader
 	context->m_sbtHelper.AddHitGroup(L"HitGroup",
@@ -665,18 +658,11 @@ void DXRSetup::CreateShaderBindingTable()
 			(void*)(m_app->m_drawableObjects[1]->getIndexBuffer()->GetGPUVirtualAddress()),
 			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress()),
 			(void*)(m_app->GetContext()->m_debugBuffer.Get()->GetGPUVirtualAddress()),
-			(void*)(m_app->GetContext()->m_texArray[0].Get()->GetGPUVirtualAddress()),
-
 			heapPointer
 		});
 
 	// Adding the plane shadow hit shader.
-	context->m_sbtHelper.AddHitGroup(L"ShadowHitGroup",
-		{ (void*)(m_app->m_drawableObjects[1]->getVertexBuffer()->GetGPUVirtualAddress()),
-			(void*)(m_app->m_drawableObjects[1]->getIndexBuffer()->GetGPUVirtualAddress()),
-			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress()),
-			heapPointer
-		});
+	context->m_sbtHelper.AddHitGroup(L"ShadowHitGroup",{});
 
 	// Adding the plane hit shader
 	context->m_sbtHelper.AddHitGroup(L"PlaneHitGroup",
@@ -684,18 +670,11 @@ void DXRSetup::CreateShaderBindingTable()
 			(void*)(m_app->m_drawableObjects[2]->getIndexBuffer()->GetGPUVirtualAddress()),
 			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress()),
 			(void*)(m_app->GetContext()->m_debugBuffer.Get()->GetGPUVirtualAddress()),
-			(void*)(m_app->GetContext()->m_texArray[0].Get()->GetGPUVirtualAddress()),
-
 			heapPointer
 		});
 
 	// Adding the plane shadow hit shader.
-	context->m_sbtHelper.AddHitGroup(L"ShadowHitGroup",
-		{ (void*)(m_app->m_drawableObjects[2]->getVertexBuffer()->GetGPUVirtualAddress()),
-			(void*)(m_app->m_drawableObjects[2]->getIndexBuffer()->GetGPUVirtualAddress()),
-			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress()),
-			heapPointer
-		});
+	context->m_sbtHelper.AddHitGroup(L"ShadowHitGroup", { });
 
 
 	// Compute the size of the SBT given the number of shaders and their
