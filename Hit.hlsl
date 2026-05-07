@@ -33,7 +33,9 @@ cbuffer LightParams : register(b0)
 cbuffer DebugParams : register(b1)
 {
     int shadowSampleCount;
-    float3 paddingDebug;
+    float materialAlbedo;
+    float materialRoughness;
+    float materialMetalness;
 };
 
 float3 HitAttributeFloat3(float3 vertexAttribute[3], Attributes attrib)
@@ -193,7 +195,8 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     float3 halfwayVector = normalize(lightDir + viewDir);
     float spec = pow(saturate(dot(worldNormal, halfwayVector)), shininess);
     float4 specularCalc = spec * lightSpecularColour;
-       
+      
+    
     // Calculate and apply reflection colour. TODO: Add some sort of value to tweak it. Maybe I could sample textures later too :D
     RayDesc ray;
     ray.Origin = HitWorldPosition();
