@@ -14,6 +14,9 @@ StructuredBuffer<STriVertex> BTriVertex : register(t0);
 StructuredBuffer<int> indices : register(t1);
 RaytracingAccelerationStructure SceneBVH : register(t2);
 Texture2D<float4> g_texture : register(t3);
+Texture2D<float4> g_metalMap : register(t4);
+Texture2D<float4> g_normal : register(t5);
+
 SamplerState g_sampler : register(s0);
 
 cbuffer LightParams : register(b0)
@@ -204,9 +207,7 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     finalCol += reflectionColour;
     finalCol *= attenuation;
     
-    
-    
-    //payload.colorAndDistance = finalCol ;
+    float4 sampe = g_metalMap.SampleLevel(g_sampler, triTexCoord, 0);
     payload.colorAndDistance = finalCol * g_texture.SampleLevel(g_sampler, triTexCoord, 0);
 }
 
@@ -261,5 +262,9 @@ void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
     finalCol += (diffuseCalc + specularCalc) * softShadowMultiplier;
     finalCol *= attenuation;
     
-    payload.colorAndDistance = finalCol * g_texture.SampleLevel(g_sampler, triTexCoord, 0);
+    float4 sampe = g_metalMap.SampleLevel(g_sampler, triTexCoord, 0) + g_normal.SampleLevel(g_sampler, triTexCoord, 0);
+    payload.colorAndDistance = g_texture.SampleLevel(g_sampler, triTexCoord, 0) * finalCol;
+    //g_TheFazbear.SampleLevel(g_sampler, triTexCoord, 0);
+    
+    //payload.colorAndDistance = finalCol * g_texture.SampleLevel(g_sampler, triTexCoord, 0);
 }

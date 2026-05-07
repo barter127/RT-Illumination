@@ -280,15 +280,19 @@ void DXRSetup::LoadAssets()
 	m_app->m_drawableObjects.push_back(bunnyCopy);
 	m_app->m_drawableObjects.push_back(FloorOBJ);
 
-	PointLight* light = new PointLight({0.0f, 1.0f, 0.0f, 0.0f },
-		{ 0.2f, 0.2f, 0.2f,1.0f },
-		{ 0.1f,1.0f,0.1f,1.0f },
-		{ 1.0f, 1.0f, 1.0f, 1.0f },
-		28.0f, 1.0f);
+	PointLight* light = new PointLight(
+		{0.0f, 1.0f, 0.0f, 0.0f }, // Position.
+		{ 0.2f, 0.2f, 0.2f,1.0f }, // Diffuse Col.
+		{ 0.1f,1.0f,0.1f,1.0f }, // Ambient Col.
+		{ 1.0f, 1.0f, 1.0f, 1.0f }, // Specular Col.
+		28.0f, // Shininess.
+		8.0f); // Attenuation.
 
 	m_app->m_lightVector.push_back(light);
 
 	LoadTextureFromPath(L"Models/Bunny/DefaultMaterial.png", context, 0);
+	LoadTextureFromPath(L"Models/Bunny/metalnessMap1.png", context, 1);
+	LoadTextureFromPath(L"Models/Bunny/normalMap1.png", context, 2);
 
 	// Create synchronization objects and wait until assets have been uploaded to
 	// the GPU.
@@ -394,6 +398,8 @@ ComPtr<ID3D12RootSignature> DXRSetup::CreateHitSignature() {
 
 	rsc.AddHeapRangesParameter({ { 2 /*t2*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1 /*2nd slot of the heap (see CreateShaderResourceHeap() */ } }); /*Top-level acceleration structure*/
 	rsc.AddHeapRangesParameter({ { 3 /*t3*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3 /*4th slot of the heap (see CreateShaderResourceHeap() */ } }); /*Texture*/
+	rsc.AddHeapRangesParameter({ { 4 /*t4*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 4 /*5th slot of the heap (see CreateShaderResourceHeap() */ } }); /*Texture*/
+	rsc.AddHeapRangesParameter({ { 5 /*t5*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 5 /*6th slot of the heap (see CreateShaderResourceHeap() */ } }); /*Texture*/
 
 	D3D12_STATIC_SAMPLER_DESC sampler = {};
 	sampler.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT;
@@ -557,7 +563,7 @@ void DXRSetup::CreateShaderResourceHeap()
 {
 	DXRContext* context = m_app->GetContext();
 
-	constexpr int numOfDescHeaps = 4;
+	constexpr int numOfDescHeaps = 6;
 
 	// Create a SRV/UAV/CBV descriptor heap. We need 2 entries - 1 UAV for the
 	// raytracing output and 1 SRV for the TLAS
@@ -602,6 +608,12 @@ void DXRSetup::CreateShaderResourceHeap()
 	// 4a. Add the texture shader resource view after the Camera (increment the handle so it is after the constant buffer view)
 	srvHandle.ptr += m_device -> GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	CreateTextureUploadHeap(srvHandle, context, 0);
+
+	srvHandle.ptr += m_device -> GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	CreateTextureUploadHeap(srvHandle, context, 1);
+
+	srvHandle.ptr += m_device -> GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	CreateTextureUploadHeap(srvHandle, context, 2);
 }
 
 //-----------------------------------------------------------------------------
@@ -647,6 +659,8 @@ void DXRSetup::CreateShaderBindingTable()
 			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress()),
 			(void*)(m_app->GetContext()->m_debugBuffer.Get()->GetGPUVirtualAddress()),
 			heapPointer,	
+			heapPointer,	
+			heapPointer,	
 			heapPointer
 		});
 
@@ -660,6 +674,8 @@ void DXRSetup::CreateShaderBindingTable()
 			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress()),
 			(void*)(m_app->GetContext()->m_debugBuffer.Get()->GetGPUVirtualAddress()),
 			heapPointer,
+			heapPointer,
+			heapPointer,
 			heapPointer
 		});
 
@@ -672,6 +688,8 @@ void DXRSetup::CreateShaderBindingTable()
 			(void*)(m_app->m_drawableObjects[2]->getIndexBuffer()->GetGPUVirtualAddress()),
 			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress()),
 			(void*)(m_app->GetContext()->m_debugBuffer.Get()->GetGPUVirtualAddress()),
+			heapPointer,
+			heapPointer,
 			heapPointer,
 			heapPointer
 		});
