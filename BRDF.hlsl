@@ -1,6 +1,8 @@
 // This file is gonna be overcommented so the evil and hard BRDF logic sticks in my head.
 
 
+static const float PI = 3.14159265f;
+
 float2 Hammersly(int index, int numSamples) // TODO
 {
     return float2(0, 0);
@@ -16,11 +18,26 @@ float G_Smith(float rougness, float NoV, float NoL)
 
 float3 ImportanceSampleGGX(float2 Xi, float roughness, float3 normal)
 {
-    return float3(0,0,0);
+    float a = pow(roughness, 2);
+    
+    float Phi = 2 * PI * Xi.x;
+    float CosTheta = sqrt((1 - Xi.y) / (1 + (a * a - 1) * Xi.y));
+    float SinTheta = sqrt(1 - CosTheta * CosTheta);
+    
+    float3 H;
+    H.x = SinTheta * cos(Phi);
+    H.y = SinTheta * sin(Phi);
+    H.z = CosTheta;
+    
+    float3 UpVector = abs(normal.z) < 0.999f ? float3(0, 0, 1) : float3(1, 0, 0);
+    float3 TangentX = normalize(cross(UpVector, normal));
+    float3 TangentY = cross(normal, TangentX);
+    
+    return TangentX * H.x + TangentY * H.y + normal * H.z;
 }
 
 // Function provided by Brian Karis from Epic Games.
-float3 IntegrateBRDF(float roughness, float NoV)
+float2 IntegrateBRDF(float roughness, float NoV)
 {
     float3 V;
     V.x = sqrt(1.0f - NoV * NoV);
@@ -56,7 +73,13 @@ float3 IntegrateBRDF(float roughness, float NoV)
     return float2(A, B) / NumSamples;
 }
 
-float3 SpecularIBL(float3 pbrSpecularColour, float materialRoughness, float3 worldNormal, float3 viewDir)
+float3 ApproximateSpecularIBL(float3 pbrSpecularColour, float materialRoughness, float3 worldNormal, float3 viewDir)
 {
-    return pbrSpecularColour;
+    float NoV = saturate(dot(worldNormal, viewDir));
+    float3 R = 2 * dot(viewDir, worldNormal) * worldNormal - viewDir;
+    
+    float3 PrefilteredColour = float3(0, 0, 0);
+    float2 EnvBRDF = IntegrateBRDF(materialRoughness, NoV);
+    
+    return PrefilteredColour * (pbrSpecularColour * EnvBRDF.x + EnvBRDF.y);
 }
