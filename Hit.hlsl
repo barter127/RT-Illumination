@@ -207,7 +207,7 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     
     
     //payload.colorAndDistance = finalCol ;
-    payload.colorAndDistance = finalCol + g_texture.SampleLevel(g_sampler, triTexCoord, 0);
+    payload.colorAndDistance = finalCol * g_texture.SampleLevel(g_sampler, triTexCoord, 0);
 }
 
 [shader("closesthit")]
@@ -261,5 +261,5 @@ void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
     finalCol += (diffuseCalc + specularCalc) * softShadowMultiplier;
     finalCol *= attenuation;
     
-    payload.colorAndDistance = finalCol + g_texture.SampleLevel(g_sampler, triTexCoord, 0);
+    payload.colorAndDistance = finalCol * g_texture.SampleLevel(g_sampler, triTexCoord, 0);
 }

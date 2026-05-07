@@ -646,6 +646,7 @@ void DXRSetup::CreateShaderBindingTable()
 			(void*)(m_app->m_drawableObjects[0]->getIndexBuffer()->GetGPUVirtualAddress()),
 			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress()),
 			(void*)(m_app->GetContext()->m_debugBuffer.Get()->GetGPUVirtualAddress()),
+			heapPointer,	
 			heapPointer
 		});
 
@@ -658,6 +659,7 @@ void DXRSetup::CreateShaderBindingTable()
 			(void*)(m_app->m_drawableObjects[1]->getIndexBuffer()->GetGPUVirtualAddress()),
 			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress()),
 			(void*)(m_app->GetContext()->m_debugBuffer.Get()->GetGPUVirtualAddress()),
+			heapPointer,
 			heapPointer
 		});
 
@@ -670,6 +672,7 @@ void DXRSetup::CreateShaderBindingTable()
 			(void*)(m_app->m_drawableObjects[2]->getIndexBuffer()->GetGPUVirtualAddress()),
 			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress()),
 			(void*)(m_app->GetContext()->m_debugBuffer.Get()->GetGPUVirtualAddress()),
+			heapPointer,
 			heapPointer
 		});
 
