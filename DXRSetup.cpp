@@ -275,10 +275,25 @@ void DXRSetup::LoadAssets()
 	FloorOBJ->setEulerRotation({ 180.0f, 0.0f, 0.0f });
 	FloorOBJ->update(0);
 
+	DrawableGameObject* DragonOBJ = new DrawableGameObject();
+	DragonOBJ->initMeshFromPath(m_device, "Models/Dragon/Dragon.obj");
+	DragonOBJ->setScale({ 0.01f, 0.01f, 0.01f });
+	DragonOBJ->setPosition({ 0.0f, -1.7f, 3.0 });
+	DragonOBJ->setEulerRotation({ 180.0f, 0.0f, 180.0f });
+	DragonOBJ->update(0);
+
+	DrawableGameObject* DragonCopy = new DrawableGameObject();
+	DragonCopy->initMeshFromPath(m_device, "Models/Dragon/Dragon.obj");
+	DragonCopy->setScale({ 0.01f, 0.01f, 0.01f });
+	DragonCopy->setPosition({ 2.0f, -1.7f, 3.0 });
+	DragonCopy->setEulerRotation({ 180.0f, 0.0f, 180.0f });
+	DragonCopy->update(0);
 
 	m_app->m_drawableObjects.push_back(bunnyOBJ);
 	m_app->m_drawableObjects.push_back(bunnyCopy);
 	m_app->m_drawableObjects.push_back(FloorOBJ);
+	m_app->m_drawableObjects.push_back(DragonOBJ);
+	m_app->m_drawableObjects.push_back(DragonCopy);
 
 	PointLight* light = new PointLight(
 		{0.0f, 1.0f, 0.0f, 0.0f }, // Position.
@@ -290,9 +305,9 @@ void DXRSetup::LoadAssets()
 
 	m_app->m_lightVector.push_back(light);
 
-	LoadTextureFromPath(L"Models/Bunny/DefaultMaterial.png", context, 0);
-	LoadTextureFromPath(L"Models/Bunny/metalnessMap1.png", context, 1);
-	LoadTextureFromPath(L"Models/Bunny/normalMap1.png", context, 2);
+	LoadTextureFromPath(L"Models/Dragon/DefaultMaterial.png", context, 0);
+	LoadTextureFromPath(L"Models/Dragon/metalnessMap1.png", context, 1);
+	LoadTextureFromPath(L"Models/Dragon/normalMap1.png", context, 2);
 
 	// Create synchronization objects and wait until assets have been uploaded to
 	// the GPU.
@@ -324,11 +339,11 @@ void DXRSetup::CreateAccelerationStructures()
 	DXRContext* context = m_app->GetContext();
 
 	// Build the bottom AS from the Triangle vertex buffer
-	AccelerationStructureBuffers bottomLevelTriBuffers =
+	AccelerationStructureBuffers bottomLevelBunny =
 		CreateBottomLevelAS({ {m_app->m_drawableObjects[0]->getVertexBuffer().Get(), m_app->m_drawableObjects[0]->getVertexCount()} }, 
 			{ {m_app->m_drawableObjects[0]->getIndexBuffer().Get(), m_app->m_drawableObjects[0]->getIndexCount()}});
 
-	AccelerationStructureBuffers bottomLevelBunnyBuffers =
+	AccelerationStructureBuffers bottomLevelBunnyCpyBuffers =
 		CreateBottomLevelAS({ {m_app->m_drawableObjects[1]->getVertexBuffer().Get(), m_app->m_drawableObjects[1]->getVertexCount()} },
 			{ {m_app->m_drawableObjects[1]->getIndexBuffer().Get(), m_app->m_drawableObjects[1]->getIndexCount()} });
 
@@ -336,9 +351,19 @@ void DXRSetup::CreateAccelerationStructures()
 		CreateBottomLevelAS({ {m_app->m_drawableObjects[2]->getVertexBuffer().Get(), m_app->m_drawableObjects[2]->getVertexCount()} }, 
 			{ {m_app->m_drawableObjects[2]->getIndexBuffer().Get(), m_app->m_drawableObjects[2]->getIndexCount()}});
 
-	m_app->m_instances.push_back(std::make_pair(bottomLevelTriBuffers.pResult, m_app->m_drawableObjects[0]->getTransform()));
-	m_app->m_instances.push_back(std::make_pair(bottomLevelBunnyBuffers.pResult, m_app->m_drawableObjects[1]->getTransform()));
+	AccelerationStructureBuffers bottomLevelDragonBuffers =
+		CreateBottomLevelAS({ {m_app->m_drawableObjects[3]->getVertexBuffer().Get(), m_app->m_drawableObjects[3]->getVertexCount()} }, 
+			{ {m_app->m_drawableObjects[3]->getIndexBuffer().Get(), m_app->m_drawableObjects[3]->getIndexCount()}});
+
+	AccelerationStructureBuffers bottomLevelDragonBuffersCpy =
+		CreateBottomLevelAS({ {m_app->m_drawableObjects[4]->getVertexBuffer().Get(), m_app->m_drawableObjects[4]->getVertexCount()} }, 
+			{ {m_app->m_drawableObjects[4]->getIndexBuffer().Get(), m_app->m_drawableObjects[4]->getIndexCount()}});
+
+	m_app->m_instances.push_back(std::make_pair(bottomLevelBunny.pResult, m_app->m_drawableObjects[0]->getTransform()));
+	m_app->m_instances.push_back(std::make_pair(bottomLevelBunnyCpyBuffers.pResult, m_app->m_drawableObjects[1]->getTransform()));
 	m_app->m_instances.push_back(std::make_pair(bottomLevelPlaneBuffers.pResult, m_app->m_drawableObjects[2]->getTransform()));
+	m_app->m_instances.push_back(std::make_pair(bottomLevelDragonBuffers.pResult, m_app->m_drawableObjects[3]->getTransform()));
+	m_app->m_instances.push_back(std::make_pair(bottomLevelDragonBuffersCpy.pResult, m_app->m_drawableObjects[4]->getTransform()));
 	CreateTopLevelAS(m_app->m_instances, false);
 
 	// Flush the command list and wait for it to finish
@@ -668,21 +693,6 @@ void DXRSetup::CreateShaderBindingTable()
 	context->m_sbtHelper.AddHitGroup(L"ShadowHitGroup", {});
 
 	// Adding the plane hit shader
-	context->m_sbtHelper.AddHitGroup(L"HitGroup",
-		{ (void*)(m_app->m_drawableObjects[1]->getVertexBuffer()->GetGPUVirtualAddress()),
-			(void*)(m_app->m_drawableObjects[1]->getIndexBuffer()->GetGPUVirtualAddress()),
-			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress()),
-			(void*)(m_app->GetContext()->m_debugBuffer.Get()->GetGPUVirtualAddress()),
-			heapPointer,
-			heapPointer,
-			heapPointer,
-			heapPointer
-		});
-
-	// Adding the plane shadow hit shader.
-	context->m_sbtHelper.AddHitGroup(L"ShadowHitGroup",{});
-
-	// Adding the plane hit shader
 	context->m_sbtHelper.AddHitGroup(L"PlaneHitGroup",
 		{ (void*)(m_app->m_drawableObjects[2]->getVertexBuffer()->GetGPUVirtualAddress()),
 			(void*)(m_app->m_drawableObjects[2]->getIndexBuffer()->GetGPUVirtualAddress()),
@@ -696,6 +706,20 @@ void DXRSetup::CreateShaderBindingTable()
 
 	// Adding the plane shadow hit shader.
 	context->m_sbtHelper.AddHitGroup(L"ShadowHitGroup", { });
+
+	context->m_sbtHelper.AddHitGroup(L"HitGroup",
+		{ (void*)(m_app->m_drawableObjects[3]->getVertexBuffer()->GetGPUVirtualAddress()),
+			(void*)(m_app->m_drawableObjects[3]->getIndexBuffer()->GetGPUVirtualAddress()),
+			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress()),
+			(void*)(m_app->GetContext()->m_debugBuffer.Get()->GetGPUVirtualAddress()),
+			heapPointer,
+			heapPointer,
+			heapPointer,
+			heapPointer
+		});
+
+	// Adding Shadow Hit Group.
+	context->m_sbtHelper.AddHitGroup(L"ShadowHitGroup", {});
 
 
 	// Compute the size of the SBT given the number of shaders and their
@@ -977,6 +1001,12 @@ void DXRSetup::CreateTopLevelAS(
 			static_cast<UINT>(0));
 		context->m_topLevelASGenerator.AddInstance(instances[2].first.Get(),
 			instances[2].second, static_cast<UINT>(2),
+			static_cast<UINT>(2));
+		context->m_topLevelASGenerator.AddInstance(instances[3].first.Get(),
+			instances[3].second, static_cast<UINT>(3),
+			static_cast<UINT>(4));
+		context->m_topLevelASGenerator.AddInstance(instances[4].first.Get(),
+			instances[4].second, static_cast<UINT>(4),
 			static_cast<UINT>(4));
 
 
@@ -1008,6 +1038,7 @@ void DXRSetup::CreateTopLevelAS(
 			m_device.Get(), scratchSize, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
 			D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
 			nv_helpers_dx12::kDefaultHeapProps);
+
 		context->m_topLevelASBuffers.pResult = nv_helpers_dx12::CreateBuffer(
 			m_device.Get(), resultSize, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
 			D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
