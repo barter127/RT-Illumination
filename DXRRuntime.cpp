@@ -30,10 +30,10 @@ void DXRRuntime::Render()
 	ImGui_ImplDX12_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
-	//ImGui::ShowDemoWindow(); // Show demo window
 	bool resize = true;
 	m_ui->TransformPanel(*m_app->m_drawableObjects[m_currentObjIndex], m_currentObjIndex, m_app->m_drawableObjects.size());
 	m_ui->LightPanel(*m_app->m_lightVector[m_currentLightIndex], m_currentLightIndex, m_app->m_lightVector.size());
+	m_ui->GPUDebugPanel(&m_app->m_shadowSampleCount, &m_app->m_materialAlbedo, &m_app->m_materialRoughness, &m_app->m_materialMetalness);
 
 	// Record all the commands we need to render the scene into the command list.
 	PopulateCommandList();
