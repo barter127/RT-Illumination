@@ -1,32 +1,17 @@
 #pragma once
 #include <DirectXMath.h>
+#include "BaseLight.h"
 
 //#include "common.h"
 
-class PointLight
+class PointLight : public BaseLight
 {
 public:
 	PointLight(DirectX::XMFLOAT4 pos,
 		DirectX::XMFLOAT4 ambientCol, DirectX::XMFLOAT4 diffuseCol, DirectX::XMFLOAT4 specularCol,
-		float shininess, float attenuationRadius) :
-		m_position(pos),
-		m_ambientColour(ambientCol), m_diffuseColour(diffuseCol), m_specularColour(specularCol),
-		m_shininess(shininess), m_attenuationRadius(attenuationRadius)
+		float shininess, float attenuationRadius) : 
+		BaseLight(pos, ambientCol, diffuseCol, specularCol, shininess, attenuationRadius)
 	{
+		m_type = LightTypes::Point;
 	}
-
-	DirectX::XMFLOAT4 m_position;
-
-	DirectX::XMFLOAT4 m_ambientColour;
-	DirectX::XMFLOAT4 m_diffuseColour;
-	DirectX::XMFLOAT4 m_specularColour;
-	float m_shininess = 28;
-		 
-	float m_attenuationRadius;
-
-	// I will investigate the lnk issue with including common if I have time.
-	const int m_type = 1;
-
-	// const LightTypes m_type = LightTypes::Point;
 };
-

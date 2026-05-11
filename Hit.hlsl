@@ -62,7 +62,7 @@ float AccumulateSoftShadowHits(int numRays, float3 lightCentre, float radius, fl
             if (hitCount <= 0)
                 return 1.0f;
                 
-            else if (hitCount == 8)
+            else if (hitCount == ShadowedCutoffCount)
                 return 0.0f;
         }
         
@@ -253,8 +253,13 @@ void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
     float4 finalCol = float4(0, 0, 0, 0);
     for (int i = 0; i < 3; i++)
     {
-        finalCol += PointLight(lightArray[i], 3, worldNormal, shadowSampleCount, payload.recursionDepth);
+        if (lightArray[i].type == DirectionalLightType)
+            finalCol += DirectionalLight(lightArray[i], 3, worldNormal, shadowSampleCount, payload.recursionDepth);
+        
+        else if (lightArray[i].type == PointLightType)
+            finalCol += PointLight(lightArray[i], 3, worldNormal, shadowSampleCount, payload.recursionDepth);
     }
+    
     
     // Calculate and apply reflection colour. TODO: Add some sort of value to tweak it. Maybe I could sample textures later too :D
     RayDesc ray;

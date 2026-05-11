@@ -21,18 +21,13 @@ struct AccelerationStructureBuffers {
 	ComPtr<ID3D12Resource> pInstanceDesc; // Hold the matrices of the instances
 };
 
-enum LightTypes
-{
-	Directional = 0,
-	Point,
-};
-
 struct LightData
 {
 	XMFLOAT4 position;
 	XMFLOAT4 ambientColour;
 	XMFLOAT4 diffuseColour;
 	XMFLOAT4 specularColour;
+
 	float shininess;
 	float attenuationRadius;
 	int type;

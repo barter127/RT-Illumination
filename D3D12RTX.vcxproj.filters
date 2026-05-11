@@ -92,9 +92,6 @@
     </ClCompile>
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="TextureLoader.cpp" />
-    <ClCompile Include="PointLight.cpp">
-      <Filter>LightData</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Win32Application.h" />
@@ -178,7 +175,13 @@
     <ClInclude Include="Input.h" />
     <ClInclude Include="TextureLoader.h" />
     <ClInclude Include="PointLight.h">
-      <Filter>LightData</Filter>
+      <Filter>LightTypes</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseLight.h">
+      <Filter>LightTypes</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectionalLight.h">
+      <Filter>LightTypes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -203,7 +206,7 @@
     <Filter Include="NVidia Helpers">
       <UniqueIdentifier>{29231412-411d-485b-bdb4-b4c0f132b44f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="LightData">
+    <Filter Include="LightTypes">
       <UniqueIdentifier>{fb10fda1-e906-46ad-9352-de648ed822c4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>

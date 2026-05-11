@@ -843,7 +843,7 @@ void DXRSetup::UpdateLightBuffer()
 	DXRContext* context = m_app->GetContext();
 
 	// Maybe I should make a function that returns a light buffer;
-	LightBuffer lb = 
+	LightBuffer lb =
 	{
 		{
 			{
@@ -853,7 +853,7 @@ void DXRSetup::UpdateLightBuffer()
 				m_app->m_lightVector[0]->m_specularColour,
 				m_app->m_lightVector[0]->m_shininess,
 				m_app->m_lightVector[0]->m_attenuationRadius,
-				m_app->m_lightVector[0]->m_type
+				m_app->m_lightVector[0]->LightType()
 			},
 
 			{
@@ -863,7 +863,7 @@ void DXRSetup::UpdateLightBuffer()
 				m_app->m_lightVector[1]->m_specularColour,
 				m_app->m_lightVector[1]->m_shininess,
 				m_app->m_lightVector[1]->m_attenuationRadius,
-				m_app->m_lightVector[1]->m_type
+				m_app->m_lightVector[1]->LightType()
 			},
 
 			{
@@ -873,7 +873,7 @@ void DXRSetup::UpdateLightBuffer()
 				m_app->m_lightVector[2]->m_specularColour,
 				m_app->m_lightVector[2]->m_shininess,
 				m_app->m_lightVector[2]->m_attenuationRadius,
-				m_app->m_lightVector[2]->m_type
+				m_app->m_lightVector[2]->LightType()
 			}
 		}
 	};
