@@ -24,9 +24,10 @@ Texture2D<float4> g_dNormal : register(t8);
 
 SamplerState g_sampler : register(s0);
 
+static const int lightCount = 4;
 cbuffer LightBuffer : register(b0)
 {
-    LightData lightArray[3];
+    LightData lightArray[lightCount];
 };
 
 cbuffer DebugParams : register(b1)
@@ -163,9 +164,12 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
     
     float4 finalCol = float4(0, 0, 0, 0);
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < lightCount; i++)
     {
-        finalCol += PointLight(lightArray[i], 3, worldNormal, shadowSampleCount, payload.recursionDepth);
+        if (lightArray[i].type == DirectionalLightType)
+            finalCol += DirectionalLight(lightArray[i], lightCount, worldNormal, shadowSampleCount, payload.recursionDepth);
+        else if (lightArray[i].type == PointLightType)
+            finalCol += PointLight(lightArray[i], lightCount, worldNormal, shadowSampleCount, payload.recursionDepth);
     }
     
     // Calculate and apply reflection colour. TODO: Add some sort of value to tweak it. Maybe I could sample textures later too :D
@@ -207,9 +211,12 @@ void DragonClosestHit(inout HitInfo payload, Attributes attrib)
     float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
     
     float4 finalCol = float4(0, 0, 0, 0);
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < lightCount; i++)
     {
-        finalCol += PointLight(lightArray[i], 3, worldNormal, shadowSampleCount, payload.recursionDepth);
+        if (lightArray[i].type == DirectionalLightType)
+            finalCol += DirectionalLight(lightArray[i], lightCount, worldNormal, shadowSampleCount, payload.recursionDepth);
+        else if (lightArray[i].type == PointLightType)
+            finalCol += PointLight(lightArray[i], lightCount, worldNormal, shadowSampleCount, payload.recursionDepth);
     }
     
     // Calculate and apply reflection colour. TODO: Add some sort of value to tweak it. Maybe I could sample textures later too :D
@@ -222,8 +229,8 @@ void DragonClosestHit(inout HitInfo payload, Attributes attrib)
     
     finalCol += reflectionColour;
     
-    float4 sampe = g_bMetalMap.SampleLevel(g_sampler, triTexCoord, 0) + g_bNormal.SampleLevel(g_sampler, triTexCoord, 0);
-    payload.colorAndDistance = finalCol * g_bTexture.SampleLevel(g_sampler, triTexCoord, 0);
+    float4 sampe = g_dMetalMap.SampleLevel(g_sampler, triTexCoord, 0) + g_dNormal.SampleLevel(g_sampler, triTexCoord, 0);
+    payload.colorAndDistance = finalCol * g_dTexture.SampleLevel(g_sampler, triTexCoord, 0);
 }
 
 [shader("closesthit")]
@@ -251,21 +258,16 @@ void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
     float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
     
     float4 finalCol = float4(0, 0, 0, 0);
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < lightCount; i++)
     {
         if (lightArray[i].type == DirectionalLightType)
-            finalCol += DirectionalLight(lightArray[i], 3, worldNormal, shadowSampleCount, payload.recursionDepth);
+            finalCol += DirectionalLight(lightArray[i], lightCount, worldNormal, shadowSampleCount, payload.recursionDepth);
         
         else if (lightArray[i].type == PointLightType)
-            finalCol += PointLight(lightArray[i], 3, worldNormal, shadowSampleCount, payload.recursionDepth);
+            finalCol += PointLight(lightArray[i], lightCount, worldNormal, shadowSampleCount, payload.recursionDepth);
     }
     
-    
-    // Calculate and apply reflection colour. TODO: Add some sort of value to tweak it. Maybe I could sample textures later too :D
-    RayDesc ray;
-    ray.Origin = HitWorldPosition();
-    ray.Direction = reflect(WorldRayDirection(), worldNormal);
-    float4 reflectionColour = TraceRadianceRay(ray, payload.recursionDepth);
+  
     
     float4 sampe = g_bMetalMap.SampleLevel(g_sampler, triTexCoord, 0) + g_bNormal.SampleLevel(g_sampler, triTexCoord, 0);
     payload.colorAndDistance = finalCol;

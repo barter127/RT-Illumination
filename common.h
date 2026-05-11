@@ -36,7 +36,7 @@ struct LightData
 
 struct LightBuffer
 {
-	LightData lightArray[3];
+	LightData lightArray[4];
 };
 
 struct DebugBuffer

@@ -2,6 +2,8 @@
 #include "ImGuiWrapper.h"
 
 #include "imgui.h"
+
+#include "BaseLight.h"
 #include "PointLight.h"
 
 using namespace DirectX;
@@ -135,7 +137,7 @@ void ImGuiWrapper::SwitchIndex(int& index, int objCount)
 	}
 }
 
-void ImGuiWrapper::LightPanel(PointLight& point, int& lightIndex, int lightCount)
+void ImGuiWrapper::LightPanel(BaseLight& point, int& lightIndex, int lightCount)
 {
 	constexpr int resetToZero = 0;
 

@@ -16,6 +16,7 @@
 #include "DrawableGameObject.h"
 #include "DebugCamera.h"
 #include "PointLight.h"
+#include "DirectionalLight.h"
 #include "TextureLoader.h"
 
 
@@ -297,31 +298,39 @@ void DXRSetup::LoadAssets()
 
 	PointLight* redLight = new PointLight(
 		{ -4.0f, 1.0f, 0.0f, 0.0f }, // Position.
-		{ 0.05f, 0.05f, 0.05f,1.0f }, // Diffuse Col.
-		{ 1.0f, 0.1f,0.1f,1.0f }, // Ambient Col.
+		{ 0.05f, 0.05f, 0.05f,1.0f }, // Ambient Col.
+		{ 1.0f, 0.1f,0.1f,1.0f }, // Diffuse Col.
 		{ 0.5f, 0.5f, 0.5f, 0.5f }, // Specular Col.
 		256.0f, // Shininess.
 		8.0f); // Attenuation.
 
 	PointLight* greenLight = new PointLight(
 		{0.0f, 1.0f, 0.0f, 0.0f }, // Position.
-		{ 0.05f, 0.05f, 0.05f,1.0f }, // Diffuse Col.
-		{ 0.1f,1.0f,0.1f,1.0f }, // Ambient Col.
+		{ 0.05f, 0.05f, 0.05f,1.0f }, // Ambient Col.
+		{ 0.1f,1.0f,0.1f,1.0f }, // Diffuse Col.
 		{ 0.5f, 0.5f, 0.5f, 0.5f }, // Specular Col.
 		256.0f, // Shininess.
 		8.0f); // Attenuation.
 
 	PointLight* blueLight = new PointLight(
 		{ 4.0f, 1.0f, 0.0f, 0.0f }, // Position.
-		{ 0.05f, 0.05f, 0.05f,1.0f }, // Diffuse Col.
-		{ 0.1f, 0.1f, 1.0f,1.0f }, // Ambient Col.
+		{ 0.05f, 0.05f, 0.05f,1.0f }, // Ambient Col.
+		{ 0.1f, 0.1f, 1.0f,1.0f }, // Diffuse Col.
 		{ 0.5f, 0.5f, 0.5f, 0.5f }, // Specular Col.
 		256.0f, // Shininess.
 		8.0f); // Attenuation.
 
+	DirectionalLight* DirLight = new DirectionalLight(
+		{ 0.0f, 1.0f, 0.0f, 0.0f }, // Position.
+		{ 0.05f, 0.05f, 0.05f,1.0f }, // Ambient Col.
+		{ 0.25f, 0.25f, 0.25f, 0.25f }, // Diffuse Col.
+		{ 0.5f, 0.5f, 0.5f, 0.5f }, // Specular Col.
+		256.0); // Shininess.
+
 	m_app->m_lightVector.push_back(redLight);
 	m_app->m_lightVector.push_back(greenLight);
 	m_app->m_lightVector.push_back(blueLight);
+	m_app->m_lightVector.push_back(DirLight);
 
 	LoadTextureFromPath(L"Models/Bunny/DefaultMaterial.png", context, 0);
 	LoadTextureFromPath(L"Models/Bunny/metalnessMap1.png", context, 1);
@@ -821,7 +830,7 @@ void DXRSetup::CreateLightBuffer()
 {
 	DXRContext* context = m_app->GetContext();
 
-	context->m_lightBufferSize = 256;
+	context->m_lightBufferSize = 512;
 	context->m_lightBuffer = nv_helpers_dx12::CreateBuffer(m_device.Get(),
 		context->m_lightBufferSize,
 		D3D12_RESOURCE_FLAG_NONE,
@@ -874,6 +883,16 @@ void DXRSetup::UpdateLightBuffer()
 				m_app->m_lightVector[2]->m_shininess,
 				m_app->m_lightVector[2]->m_attenuationRadius,
 				m_app->m_lightVector[2]->LightType()
+			},
+
+			{
+				m_app->m_lightVector[3]->m_position,
+				m_app->m_lightVector[3]->m_ambientColour,
+				m_app->m_lightVector[3]->m_diffuseColour,
+				m_app->m_lightVector[3]->m_specularColour,
+				m_app->m_lightVector[3]->m_shininess,
+				m_app->m_lightVector[3]->m_attenuationRadius,
+				m_app->m_lightVector[3]->LightType()
 			}
 		}
 	};

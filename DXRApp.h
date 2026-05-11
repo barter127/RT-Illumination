@@ -19,7 +19,7 @@
 
 
 class DrawableGameObject;
-class PointLight;
+class BaseLight;
 
 using namespace DirectX;
 using namespace std;
@@ -70,7 +70,7 @@ private:
 	std::vector<std::pair<ComPtr<ID3D12Resource>, DirectX::XMMATRIX>> m_instances;
 
 	vecDrawables m_drawableObjects;
-	std::vector<PointLight*> m_lightVector;
+	std::vector<BaseLight*> m_lightVector;
 	int m_shadowSampleCount = 128;
 	float m_materialAlbedo;
 	float m_materialRoughness;

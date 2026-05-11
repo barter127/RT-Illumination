@@ -5,6 +5,8 @@
 
 #include "DrawableGameObject.h"
 
+class BaseLight;
+
 class ImGuiWrapper
 {
 public:
@@ -14,7 +16,7 @@ public:
 
 	void SwitchIndex(int& index, int objCount);
 
-	void LightPanel(PointLight& point, int& lightIndex, int lightCount);
+	void LightPanel(BaseLight& point, int& lightIndex, int lightCount);
 
 	void GPUDebugPanel(int* shadowSampleCount, float* matAlbedo, float* matRoughness, float* matMetalness);
 };

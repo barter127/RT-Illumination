@@ -28,12 +28,19 @@ float4 PointLight(LightData lightData, int lightCount,float3 worldNormal ,int sh
         
     // Diffuse.
     float diff = saturate(dot(worldNormal, lightDir));
-    float4 diffuseCalc = diff * lightData.diffuseColour;
     
-    // Specular.
-    float3 halfwayVector = normalize(lightDir + viewDir);
-    float spec = pow(saturate(dot(worldNormal, halfwayVector)), lightData.shininess);
-    float4 specularCalc = spec * lightData.specularColour;
+    float4 diffuseCalc = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    float4 specularCalc = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    
+    if (diff > 0.0f)
+    {
+        diffuseCalc = diff * lightData.diffuseColour;
+    
+        // Specular.
+        float3 halfwayVector = normalize(lightDir + viewDir);
+        float spec = pow(saturate(dot(worldNormal, halfwayVector)), lightData.shininess);
+        specularCalc = spec * lightData.specularColour;
+    }
         
     float softShadowMultiplier = AccumulateSoftShadowHits(shadowSampleCount, (float3) lightData.position, lightData.attenuationRadius, worldNormal, recursionDepth);
         
@@ -43,21 +50,23 @@ float4 PointLight(LightData lightData, int lightCount,float3 worldNormal ,int sh
 float4 DirectionalLight(LightData lightData, int lightCount, float3 worldNormal, int shadowSampleCount, in int recursionDepth)
 {
     float3 hitPos = HitWorldPosition();
-    float3 lightDir = normalize((float3) lightData.position);
+    float3 lightDir = normalize((float3)lightData.position);
     float3 viewDir = normalize(WorldRayOrigin() - hitPos);
-
-    float dist = length((float3) lightData.position - hitPos);
         
     // Diffuse.
     float diff = saturate(dot(worldNormal, lightDir));
-    float4 diffuseCalc = diff * lightData.diffuseColour;
     
-    // Specular.
-    float3 halfwayVector = normalize(lightDir + viewDir);
-    float spec = pow(saturate(dot(worldNormal, halfwayVector)), lightData.shininess);
-    float4 specularCalc = spec * lightData.specularColour;
+    float4 diffuseCalc = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    float4 specularCalc = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    if (diff > 0.0f)
+    {
+        diffuseCalc = diff * lightData.diffuseColour;
+    
+        // Specular.
+        float3 halfwayVector = normalize(lightDir + viewDir);
+        float spec = pow(saturate(dot(worldNormal, halfwayVector)), lightData.shininess);
+        specularCalc = spec * lightData.specularColour;
+    }
         
-    float softShadowMultiplier = AccumulateSoftShadowHits(shadowSampleCount, (float3) lightData.position, lightData.attenuationRadius, worldNormal, recursionDepth);
-        
-    return (lightData.ambientColour + diffuseCalc + specularCalc) * softShadowMultiplier;
+    return (lightData.ambientColour + diffuseCalc + specularCalc);
 }
