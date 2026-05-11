@@ -3,6 +3,9 @@
 // Note that the payload should be kept as small as possible,
 // and that its size must be declared in the corresponding
 // D3D12_RAYTRACING_SHADER_CONFIG pipeline subobjet.
+
+#define MAX_RAY_RECURSION_DEPTH 8
+
 struct HitInfo {
     float4 colorAndDistance;
     uint recursionDepth;
@@ -19,3 +22,24 @@ struct ShadowHitInfo
 {
     bool isHit;
 };
+
+float3 HitAttributeFloat3(float3 vertexAttribute[3], Attributes attrib)
+{
+    float3 barycentrics = float3(1.0f - attrib.bary.x - attrib.bary.y, attrib.bary.x, attrib.bary.y);
+    float3 Point = vertexAttribute[0] * barycentrics.x + vertexAttribute[1] * barycentrics.y + vertexAttribute[2] * barycentrics.z;
+    
+    return Point;
+}
+
+float2 HitAttributeFloat2(float2 vertexAttribute[3], Attributes attrib)
+{
+    float3 barycentrics = float3(1.0f - attrib.bary.x - attrib.bary.y, attrib.bary.x, attrib.bary.y);
+    float2 Point = vertexAttribute[0] * barycentrics.x + vertexAttribute[1] * barycentrics.y + vertexAttribute[2] * barycentrics.z;
+    
+    return Point;
+}
+
+float3 HitWorldPosition()
+{
+    return WorldRayOrigin() + RayTCurrent() * WorldRayDirection();
+}

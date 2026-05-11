@@ -296,27 +296,27 @@ void DXRSetup::LoadAssets()
 	m_app->m_drawableObjects.push_back(DragonCopy);
 
 	PointLight* redLight = new PointLight(
-		{0.0f, 1.0f, 0.0f, 0.0f }, // Position.
-		{ 0.2f, 0.2f, 0.2f,1.0f }, // Diffuse Col.
+		{ -4.0f, 1.0f, 0.0f, 0.0f }, // Position.
+		{ 0.05f, 0.05f, 0.05f,1.0f }, // Diffuse Col.
 		{ 1.0f, 0.1f,0.1f,1.0f }, // Ambient Col.
-		{ 1.0f, 1.0f, 1.0f, 1.0f }, // Specular Col.
-		128.0f, // Shininess.
+		{ 0.5f, 0.5f, 0.5f, 0.5f }, // Specular Col.
+		256.0f, // Shininess.
 		8.0f); // Attenuation.
 
 	PointLight* greenLight = new PointLight(
 		{0.0f, 1.0f, 0.0f, 0.0f }, // Position.
-		{ 0.2f, 0.2f, 0.2f,1.0f }, // Diffuse Col.
+		{ 0.05f, 0.05f, 0.05f,1.0f }, // Diffuse Col.
 		{ 0.1f,1.0f,0.1f,1.0f }, // Ambient Col.
-		{ 1.0f, 1.0f, 1.0f, 1.0f }, // Specular Col.
-		128.0f, // Shininess.
+		{ 0.5f, 0.5f, 0.5f, 0.5f }, // Specular Col.
+		256.0f, // Shininess.
 		8.0f); // Attenuation.
 
 	PointLight* blueLight = new PointLight(
-		{0.0f, 1.0f, 0.0f, 0.0f }, // Position.
-		{ 0.2f, 0.2f, 0.2f,1.0f }, // Diffuse Col.
+		{ 4.0f, 1.0f, 0.0f, 0.0f }, // Position.
+		{ 0.05f, 0.05f, 0.05f,1.0f }, // Diffuse Col.
 		{ 0.1f, 0.1f, 1.0f,1.0f }, // Ambient Col.
-		{ 1.0f, 1.0f, 1.0f, 1.0f }, // Specular Col.
-		128.0f, // Shininess.
+		{ 0.5f, 0.5f, 0.5f, 0.5f }, // Specular Col.
+		256.0f, // Shininess.
 		8.0f); // Attenuation.
 
 	m_app->m_lightVector.push_back(redLight);
@@ -829,14 +829,7 @@ void DXRSetup::CreateLightBuffer()
 		nv_helpers_dx12::kUploadHeapProps);
 
 	// Maybe I should make a function that returns a light buffer;
-	LightBuffer lb = {
-		m_app->m_lightVector[0]->m_position,
-		m_app->m_lightVector[0]->m_ambientColour,
-		m_app->m_lightVector[0]->m_diffuseColour,
-		m_app->m_lightVector[0]->m_specularColour,
-		m_app->m_lightVector[0]->m_shininess,
-		m_app->m_lightVector[0]->m_attenuationRadius
-	};
+	LightBuffer lb = {};
 
 	// Copy data to cb.
 	uint8_t* pData;

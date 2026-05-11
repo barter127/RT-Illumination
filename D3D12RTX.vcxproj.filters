@@ -22,6 +22,9 @@
     <FxCompile Include="BRDF.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="Light.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Win32Application.cpp" />

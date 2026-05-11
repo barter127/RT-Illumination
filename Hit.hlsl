@@ -1,5 +1,6 @@
-#include "Common.hlsl"
+// #include "Common.hlsl"
 #include "Random.hlsl"
+#include "Light.hlsl"
 
 #define MAX_RAY_RECURSION_DEPTH 8
 
@@ -23,17 +24,6 @@ Texture2D<float4> g_dNormal : register(t8);
 
 SamplerState g_sampler : register(s0);
 
-struct LightData
-{
-    float4 lightPosition;
-    float4 lightAmbientColour;
-    float4 lightDiffuseColour;
-    float4 lightSpecularColour;
-    float shininess;
-    float attenuationRadius;
-    float2 paddingLight;
-};
-
 cbuffer LightBuffer : register(b0)
 {
     LightData lightArray[3];
@@ -47,27 +37,6 @@ cbuffer DebugParams : register(b1)
     float materialMetalness;
 };
 
-float3 HitAttributeFloat3(float3 vertexAttribute[3], Attributes attrib)
-{
-    float3 barycentrics = float3(1.0f - attrib.bary.x - attrib.bary.y, attrib.bary.x, attrib.bary.y);
-    float3 Point = vertexAttribute[0] * barycentrics.x + vertexAttribute[1] * barycentrics.y + vertexAttribute[2] * barycentrics.z;
-    
-    return Point;
-}
-
-float2 HitAttributeFloat2(float2 vertexAttribute[3], Attributes attrib)
-{
-    float3 barycentrics = float3(1.0f - attrib.bary.x - attrib.bary.y, attrib.bary.x, attrib.bary.y);
-    float2 Point = vertexAttribute[0] * barycentrics.x + vertexAttribute[1] * barycentrics.y + vertexAttribute[2] * barycentrics.z;
-    
-    return Point;
-}
-
-float3 HitWorldPosition()
-{
-    return WorldRayOrigin() + RayTCurrent() * WorldRayDirection();
-}
-
 float3 SampleSphere(float3 center, float radius)
 {
     float3 dir = RandomDirection(state);
@@ -76,6 +45,7 @@ float3 SampleSphere(float3 center, float radius)
 
 float AccumulateSoftShadowHits(int numRays, float3 lightCentre, float radius, float3 surfaceNormal, in uint recursionDepth)
 {
+    
     if (recursionDepth > MAX_RAY_RECURSION_DEPTH)
         return 1.0f;
     
@@ -85,6 +55,17 @@ float AccumulateSoftShadowHits(int numRays, float3 lightCentre, float radius, fl
     
     for (int i = 0; i < numRays; i++)
     {
+        // if nothing has been hit after this many rays exit search and assume it is unshadowed.
+        const int ShadowedCutoffCount = 4;
+        if (numRays == ShadowedCutoffCount) 
+        {
+            if (hitCount <= 0)
+                return 1.0f;
+                
+            else if (hitCount == 8)
+                return 0.0f;
+        }
+        
         // Fire Soft Shadow Ray.
         RayDesc ray;
         ray.Origin = HitWorldPosition();
@@ -181,36 +162,11 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     float3 triNormal = HitAttributeFloat3(vertexNormals, attrib);
     float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
     
-    float attenuation = 1.0f;
-    
-    float softShadowMultiplier = AccumulateSoftShadowHits(shadowSampleCount, (float3) lightArray[0].lightPosition, lightArray[0].attenuationRadius, worldNormal, payload.recursionDepth);
     float4 finalCol = float4(0, 0, 0, 0);
-
     for (int i = 0; i < 3; i++)
     {
-        float4 ambientCalc = lightArray[i].lightAmbientColour;
-    
-        float3 hitPos = HitWorldPosition();
-        float3 lightDir = normalize((float3) lightArray[i].lightPosition - hitPos);
-        float3 viewDir = normalize(WorldRayOrigin() - hitPos);
-
-        float dist = length((float3) lightArray[i].lightPosition - hitPos);
-        attenuation = saturate(1.0f - pow(dist / lightArray[i].attenuationRadius, 2.0f));
-        
-        // Diffuse.
-        float diff = saturate(dot(worldNormal, lightDir));
-        float4 diffuseCalc = diff * lightArray[i].lightDiffuseColour;
-    
-        // Specular.
-        float3 halfwayVector = normalize(lightDir + viewDir);
-        float spec = pow(saturate(dot(worldNormal, halfwayVector)), lightArray[i].shininess);
-        float4 specularCalc = spec * lightArray[i].lightSpecularColour;
-        
-        // Multiplying shadows here instead of at the end looks nicer as it keeps the ambient value.
-        finalCol += (diffuseCalc + specularCalc) * softShadowMultiplier * attenuation;
+        finalCol += PointLight(lightArray[i], 3, worldNormal, shadowSampleCount, payload.recursionDepth);
     }
-    
-      
     
     // Calculate and apply reflection colour. TODO: Add some sort of value to tweak it. Maybe I could sample textures later too :D
     RayDesc ray;
@@ -221,7 +177,6 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     // === Accumulate all light data.
     
     finalCol += reflectionColour;
-    finalCol *= softShadowMultiplier;
     
     float4 sampe = g_bMetalMap.SampleLevel(g_sampler, triTexCoord, 0) + g_bNormal.SampleLevel(g_sampler, triTexCoord, 0);
     payload.colorAndDistance = finalCol * g_bTexture.SampleLevel(g_sampler, triTexCoord, 0);
@@ -251,36 +206,11 @@ void DragonClosestHit(inout HitInfo payload, Attributes attrib)
     float3 triNormal = HitAttributeFloat3(vertexNormals, attrib);
     float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
     
-    float attenuation = 1.0f;
-    
-    float softShadowMultiplier = AccumulateSoftShadowHits(shadowSampleCount, (float3) lightArray[0].lightPosition, lightArray[0].attenuationRadius, worldNormal, payload.recursionDepth);
     float4 finalCol = float4(0, 0, 0, 0);
-
     for (int i = 0; i < 3; i++)
     {
-        float4 ambientCalc = lightArray[i].lightAmbientColour;
-    
-        float3 hitPos = HitWorldPosition();
-        float3 lightDir = normalize((float3) lightArray[i].lightPosition - hitPos);
-        float3 viewDir = normalize(WorldRayOrigin() - hitPos);
-
-        float dist = length((float3) lightArray[i].lightPosition - hitPos);
-        attenuation = saturate(1.0f - pow(dist / lightArray[i].attenuationRadius, 2.0f));
-        
-        // Diffuse.
-        float diff = saturate(dot(worldNormal, lightDir));
-        float4 diffuseCalc = diff * lightArray[i].lightDiffuseColour;
-    
-        // Specular.
-        float3 halfwayVector = normalize(lightDir + viewDir);
-        float spec = pow(saturate(dot(worldNormal, halfwayVector)), lightArray[i].shininess);
-        float4 specularCalc = spec * lightArray[i].lightSpecularColour;
-        
-        // Multiplying shadows here instead of at the end looks nicer as it keeps the ambient value.
-        finalCol += (diffuseCalc + specularCalc) * softShadowMultiplier * attenuation;
+        finalCol += PointLight(lightArray[i], 3, worldNormal, shadowSampleCount, payload.recursionDepth);
     }
-    
-      
     
     // Calculate and apply reflection colour. TODO: Add some sort of value to tweak it. Maybe I could sample textures later too :D
     RayDesc ray;
@@ -291,10 +221,9 @@ void DragonClosestHit(inout HitInfo payload, Attributes attrib)
     // === Accumulate all light data.
     
     finalCol += reflectionColour;
-    finalCol *= softShadowMultiplier;
     
-    float4 sampe = g_dMetalMap.SampleLevel(g_sampler, triTexCoord, 0);
-    payload.colorAndDistance = finalCol * g_dTexture.SampleLevel(g_sampler, triTexCoord, 0);
+    float4 sampe = g_bMetalMap.SampleLevel(g_sampler, triTexCoord, 0) + g_bNormal.SampleLevel(g_sampler, triTexCoord, 0);
+    payload.colorAndDistance = finalCol * g_bTexture.SampleLevel(g_sampler, triTexCoord, 0);
 }
 
 [shader("closesthit")]
@@ -321,36 +250,11 @@ void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
     float3 triNormal = HitAttributeFloat3(vertexNormals, attrib);
     float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
     
-    float attenuation = 1.0f;
-    
-    float softShadowMultiplier = AccumulateSoftShadowHits(shadowSampleCount, (float3) lightArray[0].lightPosition, lightArray[1].attenuationRadius, worldNormal, payload.recursionDepth);
     float4 finalCol = float4(0, 0, 0, 0);
-
     for (int i = 0; i < 3; i++)
     {
-        float4 ambientCalc = lightArray[i].lightAmbientColour;
-    
-        float3 hitPos = HitWorldPosition();
-        float3 lightDir = normalize((float3) lightArray[i].lightPosition - hitPos);
-        float3 viewDir = normalize(WorldRayOrigin() - hitPos);
-
-        float dist = length((float3) lightArray[i].lightPosition - hitPos);
-        attenuation = saturate(1.0f - pow(dist / lightArray[i].attenuationRadius, 2.0f));
-        
-        // Diffuse.
-        float diff = saturate(dot(worldNormal, lightDir));
-        float4 diffuseCalc = diff * lightArray[i].lightDiffuseColour;
-    
-        // Specular.
-        float3 halfwayVector = normalize(lightDir + viewDir);
-        float spec = pow(saturate(dot(worldNormal, halfwayVector)), lightArray[i].shininess);
-        float4 specularCalc = spec * lightArray[i].lightSpecularColour;
-        
-        // Multiplying shadows here instead of at the end looks nicer as it keeps the ambient value.
-        finalCol += (diffuseCalc + specularCalc) * softShadowMultiplier * attenuation;
+        finalCol += PointLight(lightArray[i], 3, worldNormal, shadowSampleCount, payload.recursionDepth);
     }
-    
-      
     
     // Calculate and apply reflection colour. TODO: Add some sort of value to tweak it. Maybe I could sample textures later too :D
     RayDesc ray;
@@ -358,8 +262,6 @@ void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
     ray.Direction = reflect(WorldRayDirection(), worldNormal);
     float4 reflectionColour = TraceRadianceRay(ray, payload.recursionDepth);
     
-    finalCol *= softShadowMultiplier;
-    
     float4 sampe = g_bMetalMap.SampleLevel(g_sampler, triTexCoord, 0) + g_bNormal.SampleLevel(g_sampler, triTexCoord, 0);
-    payload.colorAndDistance = finalCol * g_bTexture.SampleLevel(g_sampler, triTexCoord, 0);
+    payload.colorAndDistance = finalCol;
 }
