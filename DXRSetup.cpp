@@ -298,9 +298,9 @@ void DXRSetup::LoadAssets()
 	PointLight* redLight = new PointLight(
 		{0.0f, 1.0f, 0.0f, 0.0f }, // Position.
 		{ 0.2f, 0.2f, 0.2f,1.0f }, // Diffuse Col.
-		{ 1.0f, 0.0f,0.1f,1.0f }, // Ambient Col.
+		{ 1.0f, 0.1f,0.1f,1.0f }, // Ambient Col.
 		{ 1.0f, 1.0f, 1.0f, 1.0f }, // Specular Col.
-		28.0f, // Shininess.
+		128.0f, // Shininess.
 		8.0f); // Attenuation.
 
 	PointLight* greenLight = new PointLight(
@@ -308,15 +308,15 @@ void DXRSetup::LoadAssets()
 		{ 0.2f, 0.2f, 0.2f,1.0f }, // Diffuse Col.
 		{ 0.1f,1.0f,0.1f,1.0f }, // Ambient Col.
 		{ 1.0f, 1.0f, 1.0f, 1.0f }, // Specular Col.
-		28.0f, // Shininess.
+		128.0f, // Shininess.
 		8.0f); // Attenuation.
 
 	PointLight* blueLight = new PointLight(
 		{0.0f, 1.0f, 0.0f, 0.0f }, // Position.
 		{ 0.2f, 0.2f, 0.2f,1.0f }, // Diffuse Col.
-		{ 0.1f,0.1f,1.0f,1.0f }, // Ambient Col.
+		{ 0.1f, 0.1f, 1.0f,1.0f }, // Ambient Col.
 		{ 1.0f, 1.0f, 1.0f, 1.0f }, // Specular Col.
-		28.0f, // Shininess.
+		128.0f, // Shininess.
 		8.0f); // Attenuation.
 
 	m_app->m_lightVector.push_back(redLight);

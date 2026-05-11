@@ -172,7 +172,7 @@ void ImGuiWrapper::GPUDebugPanel(int* shadowSampleCount, float* matAlbedo,
 	float* matRoughness, float* matMetalness)
 {
 	constexpr int minShadowSample = 1;
-	constexpr int maxShadowSample = 2000;
+	constexpr int maxShadowSample = 200; // I stalled the GPU like 6 times. Don't change this future Heather.
 
 
 	ImGui::Begin("GPU Debug");
