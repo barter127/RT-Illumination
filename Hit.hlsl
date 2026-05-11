@@ -23,7 +23,7 @@ Texture2D<float4> g_dNormal : register(t8);
 
 SamplerState g_sampler : register(s0);
 
-cbuffer LightParams : register(b0)
+struct LightData
 {
     float4 lightPosition;
     float4 lightAmbientColour;
@@ -32,6 +32,11 @@ cbuffer LightParams : register(b0)
     float shininess;
     float attenuationRadius;
     float2 paddingLight;
+};
+
+cbuffer LightBuffer : register(b0)
+{
+    LightData lightArray[3];
 };
 
 cbuffer DebugParams : register(b1)
@@ -175,30 +180,30 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     
     float3 triNormal = HitAttributeFloat3(vertexNormals, attrib);
     float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
-    float4 ambientCalc = lightAmbientColour;
+    float4 ambientCalc = lightArray[0].lightAmbientColour;
     
     float4 finalCol = ambientCalc;
     float attenuation = 1.0f;
     
     
-    float softShadowMultiplier = AccumulateSoftShadowHits(shadowSampleCount, (float3) lightPosition, attenuationRadius, worldNormal, payload.recursionDepth);
+    float softShadowMultiplier = AccumulateSoftShadowHits(shadowSampleCount, (float3) lightArray[0].lightPosition, lightArray[0].attenuationRadius, worldNormal, payload.recursionDepth);
 
     
     float3 hitPos = HitWorldPosition();
-    float3 lightDir = normalize((float3) lightPosition - hitPos);
+    float3 lightDir = normalize((float3) lightArray[0].lightPosition - hitPos);
     float3 viewDir = normalize(WorldRayOrigin() - hitPos);
 
-    float dist = length((float3) lightPosition - hitPos);
-    attenuation = saturate(1.0f - pow(dist / attenuationRadius, 2.0f));
+    float dist = length((float3) lightArray[0].lightPosition - hitPos);
+    attenuation = saturate(1.0f - pow(dist / lightArray[0].attenuationRadius, 2.0f));
         
     // Diffuse.
     float diff = saturate(dot(worldNormal, lightDir));
-    float4 diffuseCalc = diff * lightDiffuseColour;
+    float4 diffuseCalc = diff * lightArray[0].lightDiffuseColour;
     
     // Specular.
     float3 halfwayVector = normalize(lightDir + viewDir);
-    float spec = pow(saturate(dot(worldNormal, halfwayVector)), shininess);
-    float4 specularCalc = spec * lightSpecularColour;
+    float spec = pow(saturate(dot(worldNormal, halfwayVector)), lightArray[0].shininess);
+    float4 specularCalc = spec * lightArray[0].lightSpecularColour;
       
     
     // Calculate and apply reflection colour. TODO: Add some sort of value to tweak it. Maybe I could sample textures later too :D
@@ -241,30 +246,30 @@ void DragonClosestHit(inout HitInfo payload, Attributes attrib)
     
     float3 triNormal = HitAttributeFloat3(vertexNormals, attrib);
     float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
-    float4 ambientCalc = lightAmbientColour;
+    float4 ambientCalc = lightArray[1].lightAmbientColour;
     
     float4 finalCol = ambientCalc;
     float attenuation = 1.0f;
     
     
-    float softShadowMultiplier = AccumulateSoftShadowHits(shadowSampleCount, (float3) lightPosition, attenuationRadius, worldNormal, payload.recursionDepth);
+    float softShadowMultiplier = AccumulateSoftShadowHits(shadowSampleCount, (float3) lightArray[1].lightPosition, lightArray[1].attenuationRadius, worldNormal, payload.recursionDepth);
 
     
     float3 hitPos = HitWorldPosition();
-    float3 lightDir = normalize((float3) lightPosition - hitPos);
+    float3 lightDir = normalize((float3) lightArray[1].lightPosition - hitPos);
     float3 viewDir = normalize(WorldRayOrigin() - hitPos);
 
-    float dist = length((float3) lightPosition - hitPos);
-    attenuation = saturate(1.0f - pow(dist / attenuationRadius, 2.0f));
+    float dist = length((float3) lightArray[1].lightPosition - hitPos);
+    attenuation = saturate(1.0f - pow(dist / lightArray[1].attenuationRadius, 2.0f));
         
     // Diffuse.
     float diff = saturate(dot(worldNormal, lightDir));
-    float4 diffuseCalc = diff * lightDiffuseColour;
+    float4 diffuseCalc = diff * lightArray[1].lightDiffuseColour;
     
     // Specular.
     float3 halfwayVector = normalize(lightDir + viewDir);
-    float spec = pow(saturate(dot(worldNormal, halfwayVector)), shininess);
-    float4 specularCalc = spec * lightSpecularColour;
+    float spec = pow(saturate(dot(worldNormal, halfwayVector)), lightArray[1].shininess);
+    float4 specularCalc = spec * lightArray[1].lightSpecularColour;
       
     
     // Calculate and apply reflection colour. TODO: Add some sort of value to tweak it. Maybe I could sample textures later too :D
@@ -304,7 +309,7 @@ void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
     vertexNormals[1] = BTriVertex[indices[vertID + 1]].normal.xyz;
     vertexNormals[2] = BTriVertex[indices[vertID + 2]].normal.xyz;
     
-    float4 ambientCalc = lightAmbientColour;
+    float4 ambientCalc = lightArray[2].lightAmbientColour;
     
     float4 finalCol = ambientCalc;
     float attenuation = 1.0f;
@@ -314,23 +319,23 @@ void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
     float3 triNormal = HitAttributeFloat3(vertexNormals, attrib);
     float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
     
-    float softShadowMultiplier = AccumulateSoftShadowHits(shadowSampleCount, (float3) lightPosition, attenuationRadius, worldNormal, payload.recursionDepth);
+    float softShadowMultiplier = AccumulateSoftShadowHits(shadowSampleCount, (float3) lightArray[2].lightPosition, lightArray[2].attenuationRadius, worldNormal, payload.recursionDepth);
     
     float3 hitPos = HitWorldPosition();
-    float3 lightDir = normalize((float3) lightPosition - hitPos);
+    float3 lightDir = normalize((float3) lightArray[2].lightPosition - hitPos);
     float3 viewDir = normalize(WorldRayOrigin() - hitPos);
 
-    float dist = length((float3) lightPosition - hitPos);
-    attenuation = saturate(1.0f - pow(dist / attenuationRadius, 2.0f));
+    float dist = length((float3) lightArray[2].lightPosition - hitPos);
+    attenuation = saturate(1.0f - pow(dist / lightArray[2].attenuationRadius, 2.0f));
         
     // Diffuse.
     float diff = saturate(dot(worldNormal, lightDir));
-    float4 diffuseCalc = diff * lightDiffuseColour;
+    float4 diffuseCalc = diff * lightArray[2].lightDiffuseColour;
     
     // Specular.
     float3 halfwayVector = normalize(lightDir + viewDir);
-    float spec = pow(saturate(dot(worldNormal, halfwayVector)), shininess);
-    float4 specularCalc = spec * lightSpecularColour;
+    float spec = pow(saturate(dot(worldNormal, halfwayVector)), lightArray[2].shininess);
+    float4 specularCalc = spec * lightArray[2].lightSpecularColour;
         
     finalCol += (diffuseCalc + specularCalc) * softShadowMultiplier;
     finalCol *= attenuation;

@@ -295,7 +295,15 @@ void DXRSetup::LoadAssets()
 	m_app->m_drawableObjects.push_back(DragonOBJ);
 	m_app->m_drawableObjects.push_back(DragonCopy);
 
-	PointLight* light = new PointLight(
+	PointLight* redLight = new PointLight(
+		{0.0f, 1.0f, 0.0f, 0.0f }, // Position.
+		{ 0.2f, 0.2f, 0.2f,1.0f }, // Diffuse Col.
+		{ 1.0f, 0.0f,0.1f,1.0f }, // Ambient Col.
+		{ 1.0f, 1.0f, 1.0f, 1.0f }, // Specular Col.
+		28.0f, // Shininess.
+		8.0f); // Attenuation.
+
+	PointLight* greenLight = new PointLight(
 		{0.0f, 1.0f, 0.0f, 0.0f }, // Position.
 		{ 0.2f, 0.2f, 0.2f,1.0f }, // Diffuse Col.
 		{ 0.1f,1.0f,0.1f,1.0f }, // Ambient Col.
@@ -303,7 +311,17 @@ void DXRSetup::LoadAssets()
 		28.0f, // Shininess.
 		8.0f); // Attenuation.
 
-	m_app->m_lightVector.push_back(light);
+	PointLight* blueLight = new PointLight(
+		{0.0f, 1.0f, 0.0f, 0.0f }, // Position.
+		{ 0.2f, 0.2f, 0.2f,1.0f }, // Diffuse Col.
+		{ 0.1f,0.1f,1.0f,1.0f }, // Ambient Col.
+		{ 1.0f, 1.0f, 1.0f, 1.0f }, // Specular Col.
+		28.0f, // Shininess.
+		8.0f); // Attenuation.
+
+	m_app->m_lightVector.push_back(redLight);
+	m_app->m_lightVector.push_back(greenLight);
+	m_app->m_lightVector.push_back(blueLight);
 
 	LoadTextureFromPath(L"Models/Bunny/DefaultMaterial.png", context, 0);
 	LoadTextureFromPath(L"Models/Bunny/metalnessMap1.png", context, 1);
@@ -832,13 +850,39 @@ void DXRSetup::UpdateLightBuffer()
 	DXRContext* context = m_app->GetContext();
 
 	// Maybe I should make a function that returns a light buffer;
-	LightBuffer lb = {
-		m_app->m_lightVector[0]->m_position,
-		m_app->m_lightVector[0]->m_ambientColour,
-		m_app->m_lightVector[0]->m_diffuseColour,
-		m_app->m_lightVector[0]->m_specularColour,
-		m_app->m_lightVector[0]->m_shininess,
-		m_app->m_lightVector[0]->m_attenuationRadius
+	LightBuffer lb = 
+	{
+		{
+			{
+				m_app->m_lightVector[0]->m_position,
+				m_app->m_lightVector[0]->m_ambientColour,
+				m_app->m_lightVector[0]->m_diffuseColour,
+				m_app->m_lightVector[0]->m_specularColour,
+				m_app->m_lightVector[0]->m_shininess,
+				m_app->m_lightVector[0]->m_attenuationRadius,
+				m_app->m_lightVector[0]->m_type
+			},
+
+			{
+				m_app->m_lightVector[1]->m_position,
+				m_app->m_lightVector[1]->m_ambientColour,
+				m_app->m_lightVector[1]->m_diffuseColour,
+				m_app->m_lightVector[1]->m_specularColour,
+				m_app->m_lightVector[1]->m_shininess,
+				m_app->m_lightVector[1]->m_attenuationRadius,
+				m_app->m_lightVector[1]->m_type
+			},
+
+			{
+				m_app->m_lightVector[2]->m_position,
+				m_app->m_lightVector[2]->m_ambientColour,
+				m_app->m_lightVector[2]->m_diffuseColour,
+				m_app->m_lightVector[2]->m_specularColour,
+				m_app->m_lightVector[2]->m_shininess,
+				m_app->m_lightVector[2]->m_attenuationRadius,
+				m_app->m_lightVector[2]->m_type
+			}
+		}
 	};
 
 	// Copy data to cb.

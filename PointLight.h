@@ -1,6 +1,8 @@
 #pragma once
 #include <DirectXMath.h>
 
+//#include "common.h"
+
 class PointLight
 {
 public:
@@ -21,5 +23,10 @@ public:
 	float m_shininess = 28;
 		 
 	float m_attenuationRadius;
+
+	// I will investigate the lnk issue with including common if I have time.
+	const int m_type = 1;
+
+	// const LightTypes m_type = LightTypes::Point;
 };
 

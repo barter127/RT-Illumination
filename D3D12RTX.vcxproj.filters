@@ -19,7 +19,9 @@
     <FxCompile Include="Random.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="BRDF.hlsl" />
+    <FxCompile Include="BRDF.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Win32Application.cpp" />
@@ -86,8 +88,10 @@
       <Filter>DX</Filter>
     </ClCompile>
     <ClCompile Include="Input.cpp" />
-    <ClCompile Include="PointLight.cpp" />
     <ClCompile Include="TextureLoader.cpp" />
+    <ClCompile Include="PointLight.cpp">
+      <Filter>LightData</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Win32Application.h" />
@@ -169,8 +173,10 @@
       <Filter>Camera</Filter>
     </ClInclude>
     <ClInclude Include="Input.h" />
-    <ClInclude Include="PointLight.h" />
     <ClInclude Include="TextureLoader.h" />
+    <ClInclude Include="PointLight.h">
+      <Filter>LightData</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Shaders">
@@ -193,6 +199,9 @@
     </Filter>
     <Filter Include="NVidia Helpers">
       <UniqueIdentifier>{29231412-411d-485b-bdb4-b4c0f132b44f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="LightData">
+      <UniqueIdentifier>{fb10fda1-e906-46ad-9352-de648ed822c4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
