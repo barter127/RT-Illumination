@@ -305,9 +305,12 @@ void DXRSetup::LoadAssets()
 
 	m_app->m_lightVector.push_back(light);
 
-	LoadTextureFromPath(L"Models/Dragon/DefaultMaterial.png", context, 0);
-	LoadTextureFromPath(L"Models/Dragon/metalnessMap1.png", context, 1);
-	LoadTextureFromPath(L"Models/Dragon/normalMap1.png", context, 2);
+	LoadTextureFromPath(L"Models/Bunny/DefaultMaterial.png", context, 0);
+	LoadTextureFromPath(L"Models/Bunny/metalnessMap1.png", context, 1);
+	LoadTextureFromPath(L"Models/Bunny/normalMap1.png", context, 2);
+	LoadTextureFromPath(L"Models/Dragon/DefaultMaterial.png", context, 3);
+	LoadTextureFromPath(L"Models/Dragon/metalnessMap1.png", context, 4);
+	LoadTextureFromPath(L"Models/Dragon/normalMap1.png", context, 5);
 
 	// Create synchronization objects and wait until assets have been uploaded to
 	// the GPU.
@@ -425,6 +428,9 @@ ComPtr<ID3D12RootSignature> DXRSetup::CreateHitSignature() {
 	rsc.AddHeapRangesParameter({ { 3 /*t3*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3 /*4th slot of the heap (see CreateShaderResourceHeap() */ } }); /*Texture*/
 	rsc.AddHeapRangesParameter({ { 4 /*t4*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 4 /*5th slot of the heap (see CreateShaderResourceHeap() */ } }); /*Texture*/
 	rsc.AddHeapRangesParameter({ { 5 /*t5*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 5 /*6th slot of the heap (see CreateShaderResourceHeap() */ } }); /*Texture*/
+	rsc.AddHeapRangesParameter({ { 6 /*t5*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 6 /*7th slot of the heap (see CreateShaderResourceHeap() */ } }); /*Texture*/
+	rsc.AddHeapRangesParameter({ { 7 /*t5*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 7 /*8th slot of the heap (see CreateShaderResourceHeap() */ } }); /*Texture*/
+	rsc.AddHeapRangesParameter({ { 8 /*t5*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 8 /*9th slot of the heap (see CreateShaderResourceHeap() */ } }); /*Texture*/
 
 	D3D12_STATIC_SAMPLER_DESC sampler = {};
 	sampler.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT;
@@ -483,7 +489,7 @@ void DXRSetup::CreateRaytracingPipeline()
 	// using the [shader("xxx")] syntax
 	pipeline.AddLibrary(context->m_rayGenLibrary.Get(), { L"RayGen" });
 	pipeline.AddLibrary(context->m_missLibrary.Get(), { L"Miss"});
-	pipeline.AddLibrary(context->m_hitLibrary.Get(), { L"ClosestHit", L"PlaneClosestHit"});
+	pipeline.AddLibrary(context->m_hitLibrary.Get(), { L"ClosestHit", L"DragonClosestHit", L"PlaneClosestHit"});
 	pipeline.AddLibrary(context->m_shadowLibrary.Get(), { L"ShadowMiss", L"ShadowClosestHit" });
 
 	// To be used, each DX12 shader needs a root signature defining which
@@ -510,6 +516,7 @@ void DXRSetup::CreateRaytracingPipeline()
 	// Hit group for the triangles, with a shader simply interpolating vertex
 	// colors
 	pipeline.AddHitGroup(L"HitGroup", L"ClosestHit");
+	pipeline.AddHitGroup(L"DragonHitGroup", L"DragonClosestHit");
 	pipeline.AddHitGroup(L"PlaneHitGroup", L"PlaneClosestHit");
 	pipeline.AddHitGroup(L"ShadowHitGroup", L"ShadowClosestHit");
 
@@ -520,7 +527,7 @@ void DXRSetup::CreateRaytracingPipeline()
 	// closest-hit shaders share the same root signature.
 	pipeline.AddRootSignatureAssociation(context->m_rayGenSignature.Get(), { L"RayGen" });
 	pipeline.AddRootSignatureAssociation(context->m_missSignature.Get(), { L"Miss" });
-	pipeline.AddRootSignatureAssociation(context->m_hitSignature.Get(), { L"HitGroup", L"PlaneHitGroup" } );
+	pipeline.AddRootSignatureAssociation(context->m_hitSignature.Get(), { L"HitGroup", L"DragonHitGroup", L"PlaneHitGroup" });
 
 	// The payload size defines the maximum size of the data carried by the rays,
 	// ie. the the data
@@ -588,7 +595,7 @@ void DXRSetup::CreateShaderResourceHeap()
 {
 	DXRContext* context = m_app->GetContext();
 
-	constexpr int numOfDescHeaps = 6;
+	constexpr int numOfDescHeaps = 9;
 
 	// Create a SRV/UAV/CBV descriptor heap. We need 2 entries - 1 UAV for the
 	// raytracing output and 1 SRV for the TLAS
@@ -639,6 +646,15 @@ void DXRSetup::CreateShaderResourceHeap()
 
 	srvHandle.ptr += m_device -> GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	CreateTextureUploadHeap(srvHandle, context, 2);
+
+	srvHandle.ptr += m_device -> GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	CreateTextureUploadHeap(srvHandle, context, 3);
+
+	srvHandle.ptr += m_device -> GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	CreateTextureUploadHeap(srvHandle, context, 4);
+
+	srvHandle.ptr += m_device -> GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	CreateTextureUploadHeap(srvHandle, context, 5);
 }
 
 //-----------------------------------------------------------------------------
@@ -686,6 +702,9 @@ void DXRSetup::CreateShaderBindingTable()
 			heapPointer,	
 			heapPointer,	
 			heapPointer,	
+			heapPointer,	
+			heapPointer,	
+			heapPointer,	
 			heapPointer
 		});
 
@@ -701,17 +720,23 @@ void DXRSetup::CreateShaderBindingTable()
 			heapPointer,
 			heapPointer,
 			heapPointer,
+			heapPointer,
+			heapPointer,
+			heapPointer,
 			heapPointer
 		});
 
 	// Adding the plane shadow hit shader.
 	context->m_sbtHelper.AddHitGroup(L"ShadowHitGroup", { });
 
-	context->m_sbtHelper.AddHitGroup(L"HitGroup",
+	context->m_sbtHelper.AddHitGroup(L"DragonHitGroup",
 		{ (void*)(m_app->m_drawableObjects[3]->getVertexBuffer()->GetGPUVirtualAddress()),
 			(void*)(m_app->m_drawableObjects[3]->getIndexBuffer()->GetGPUVirtualAddress()),
 			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress()),
 			(void*)(m_app->GetContext()->m_debugBuffer.Get()->GetGPUVirtualAddress()),
+			heapPointer,
+			heapPointer,
+			heapPointer,
 			heapPointer,
 			heapPointer,
 			heapPointer,

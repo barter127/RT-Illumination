@@ -13,9 +13,13 @@ struct STriVertex
 StructuredBuffer<STriVertex> BTriVertex : register(t0);
 StructuredBuffer<int> indices : register(t1);
 RaytracingAccelerationStructure SceneBVH : register(t2);
-Texture2D<float4> g_texture : register(t3);
-Texture2D<float4> g_metalMap : register(t4);
-Texture2D<float4> g_normal : register(t5);
+
+Texture2D<float4> g_bTexture : register(t3);
+Texture2D<float4> g_bMetalMap : register(t4);
+Texture2D<float4> g_bNormal : register(t5);
+Texture2D<float4> g_dTexture : register(t6);
+Texture2D<float4> g_dMetalMap : register(t7);
+Texture2D<float4> g_dNormal : register(t8);
 
 SamplerState g_sampler : register(s0);
 
@@ -210,8 +214,74 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     finalCol += reflectionColour;
     finalCol *= attenuation;
     
-    float4 sampe = g_metalMap.SampleLevel(g_sampler, triTexCoord, 0);
-    payload.colorAndDistance = finalCol * g_texture.SampleLevel(g_sampler, triTexCoord, 0);
+    float4 sampe = g_bMetalMap.SampleLevel(g_sampler, triTexCoord, 0) + g_bMetalMap.SampleLevel(g_sampler, triTexCoord, 0);
+    payload.colorAndDistance = finalCol * g_bTexture.SampleLevel(g_sampler, triTexCoord, 0);
+}
+
+[shader("closesthit")]
+void DragonClosestHit(inout HitInfo payload, Attributes attrib)
+{
+    uint vertID = 3 * PrimitiveIndex();
+    
+    float2 vertexUV[3];
+    vertexUV[0] = BTriVertex[indices[vertID + 0]].texcoord.xy;
+    vertexUV[1] = BTriVertex[indices[vertID + 1]].texcoord.xy;
+    vertexUV[2] = BTriVertex[indices[vertID + 2]].texcoord.xy;
+    
+    vertexUV[0].y *= -1;
+    vertexUV[1].y *= -1;
+    vertexUV[2].y *= -1;
+    
+    float3 vertexNormals[3];
+    vertexNormals[0] = BTriVertex[indices[vertID + 0]].normal.xyz;
+    vertexNormals[1] = BTriVertex[indices[vertID + 1]].normal.xyz;
+    vertexNormals[2] = BTriVertex[indices[vertID + 2]].normal.xyz;
+    
+    float2 triTexCoord = HitAttributeFloat2(vertexUV, attrib);
+    
+    float3 triNormal = HitAttributeFloat3(vertexNormals, attrib);
+    float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
+    float4 ambientCalc = lightAmbientColour;
+    
+    float4 finalCol = ambientCalc;
+    float attenuation = 1.0f;
+    
+    
+    float softShadowMultiplier = AccumulateSoftShadowHits(shadowSampleCount, (float3) lightPosition, attenuationRadius, worldNormal, payload.recursionDepth);
+
+    
+    float3 hitPos = HitWorldPosition();
+    float3 lightDir = normalize((float3) lightPosition - hitPos);
+    float3 viewDir = normalize(WorldRayOrigin() - hitPos);
+
+    float dist = length((float3) lightPosition - hitPos);
+    attenuation = saturate(1.0f - pow(dist / attenuationRadius, 2.0f));
+        
+    // Diffuse.
+    float diff = saturate(dot(worldNormal, lightDir));
+    float4 diffuseCalc = diff * lightDiffuseColour;
+    
+    // Specular.
+    float3 halfwayVector = normalize(lightDir + viewDir);
+    float spec = pow(saturate(dot(worldNormal, halfwayVector)), shininess);
+    float4 specularCalc = spec * lightSpecularColour;
+      
+    
+    // Calculate and apply reflection colour. TODO: Add some sort of value to tweak it. Maybe I could sample textures later too :D
+    RayDesc ray;
+    ray.Origin = HitWorldPosition();
+    ray.Direction = reflect(WorldRayDirection(), worldNormal);
+    float4 reflectionColour = TraceRadianceRay(ray, payload.recursionDepth);
+    
+    // === Accumulate all light data.
+    
+    // Multiplying shadows here instead of at the end looks nicer as it keeps the ambient value.
+    finalCol += (diffuseCalc + specularCalc) * softShadowMultiplier;
+    finalCol += reflectionColour;
+    finalCol *= attenuation;
+    
+    float4 sampe = g_dMetalMap.SampleLevel(g_sampler, triTexCoord, 0);
+    payload.colorAndDistance = finalCol * g_dTexture.SampleLevel(g_sampler, triTexCoord, 0);
 }
 
 [shader("closesthit")]
@@ -265,9 +335,7 @@ void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
     finalCol += (diffuseCalc + specularCalc) * softShadowMultiplier;
     finalCol *= attenuation;
     
-    float4 sampe = g_metalMap.SampleLevel(g_sampler, triTexCoord, 0) + g_normal.SampleLevel(g_sampler, triTexCoord, 0);
-    payload.colorAndDistance = g_texture.SampleLevel(g_sampler, triTexCoord, 0) * finalCol;
-    //g_TheFazbear.SampleLevel(g_sampler, triTexCoord, 0);
-    
+    float4 sampe = g_bMetalMap.SampleLevel(g_sampler, triTexCoord, 0) + g_bNormal.SampleLevel(g_sampler, triTexCoord, 0);
+    payload.colorAndDistance = g_bTexture.SampleLevel(g_sampler, triTexCoord, 0) * finalCol;
     //payload.colorAndDistance = finalCol * g_texture.SampleLevel(g_sampler, triTexCoord, 0);
 }
