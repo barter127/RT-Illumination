@@ -2,6 +2,7 @@
 #include "ImGuiWrapper.h"
 
 #include "imgui.h"
+#include "PointLight.h"
 
 using namespace DirectX;
 using namespace std;
@@ -10,27 +11,7 @@ void ImGuiWrapper::TransformPanel(DrawableGameObject& object, int& index, int ob
 {
 	ImGui::Begin("Transform");
 
-	float lineHeight = ImGui::GetFontSize() + ImGui::GetStyle().FramePadding.y * 2.0f;
-	ImVec2 buttonSize = { lineHeight + 3.0f, lineHeight };
-	
-	
-
-	if (ImGui::Button("<", buttonSize))
-	{
-		index--; 
-
-		if (index < 0)
-			index = objCount - 1;
-	}
-
-	ImGui::SameLine();
-
-	if (ImGui::Button(">", buttonSize))
-	{
-		index++; 
-		index = index % objCount;
-	}
-
+	SwitchIndex(index, objCount);
 
 	DrawVec3Control("Position", object.m_position, 75.0f, 60.0f, 0);
 	DrawVec3Control("Rotation", object.m_eulerRotation, 75.0f, 60.0f, 0);
@@ -132,9 +113,29 @@ void ImGuiWrapper::DrawVec3Control(string displayString, XMFLOAT3& vector, int b
 
 }
 
-void ImGuiWrapper::LightPanel(float* ambientCol, float* diffuseCol,
-	float* specularCol, float* specularPower,
-	XMFLOAT4& lightDir, float* attenuation)
+void ImGuiWrapper::SwitchIndex(int& index, int objCount)
+{
+	float lineHeight = ImGui::GetFontSize() + ImGui::GetStyle().FramePadding.y * 2.0f;
+	ImVec2 buttonSize = { lineHeight + 3.0f, lineHeight };
+
+	if (ImGui::Button("<", buttonSize))
+	{
+		index--;
+
+		if (index < 0)
+			index = objCount - 1;
+	}
+
+	ImGui::SameLine();
+
+	if (ImGui::Button(">", buttonSize))
+	{
+		index++;
+		index = index % objCount;
+	}
+}
+
+void ImGuiWrapper::LightPanel(PointLight& point, int& lightIndex, int lightCount)
 {
 	constexpr int resetToZero = 0;
 
@@ -146,24 +147,26 @@ void ImGuiWrapper::LightPanel(float* ambientCol, float* diffuseCol,
 
 	ImGui::Begin("Edit Light");
 
-	ImGui::ColorEdit4("Ambient Colour", ambientCol);
+	SwitchIndex(lightIndex, lightCount);
+
+	ImGui::ColorEdit4("Ambient Colour", &point.m_ambientColour.x);
 
 	ImGui::NewLine();
 
-	ImGui::ColorEdit4("Diffuse Colour", diffuseCol);
+	ImGui::ColorEdit4("Diffuse Colour", &point.m_diffuseColour.x);
 
 	ImGui::NewLine();
 
-	ImGui::ColorEdit4("Specular Colour", specularCol);
-	ImGui::SliderFloat("Specular Power", specularPower, minSpecPower, maxSpecPower, "%.1f");
+	ImGui::ColorEdit4("Specular Colour", &point.m_specularColour.x);
+	ImGui::SliderFloat("Specular Power", &point.m_shininess, minSpecPower, maxSpecPower, "%.1f");
 
 	ImGui::NewLine();
 
-	XMFLOAT3 lightDir3 = XMFLOAT3(lightDir.x, lightDir.y, lightDir.z);
+	XMFLOAT3 lightDir3 = XMFLOAT3(point.m_position.x, point.m_position.y, point.m_position.z);
 	DrawVec3Control("Direction", lightDir3, 75.0f, 60.0f,resetToZero);
-	lightDir.x = lightDir3.x; lightDir.y = lightDir3.y; lightDir.z = lightDir3.z;
+	point.m_position.x = lightDir3.x; point.m_position.y = lightDir3.y; point.m_position.z = lightDir3.z;
 
-	ImGui::SliderFloat("Attenuation", attenuation, minAttenuation, maxAttenuation, "%.1f");
+	ImGui::SliderFloat("Attenuation", &point.m_attenuationRadius, minAttenuation, maxAttenuation, "%.1f");
 
 	ImGui::End();
 }
@@ -184,5 +187,4 @@ void ImGuiWrapper::GPUDebugPanel(int* shadowSampleCount, float* matAlbedo,
 
 
 	ImGui::End();
-
 }

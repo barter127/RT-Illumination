@@ -207,11 +207,10 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
         float4 specularCalc = spec * lightArray[i].lightSpecularColour;
         
         // Multiplying shadows here instead of at the end looks nicer as it keeps the ambient value.
-        finalCol += (diffuseCalc + specularCalc) * softShadowMultiplier;
+        finalCol += (diffuseCalc + specularCalc) * softShadowMultiplier * attenuation;
     }
     
       
-    finalCol *= attenuation;
     
     // Calculate and apply reflection colour. TODO: Add some sort of value to tweak it. Maybe I could sample textures later too :D
     RayDesc ray;
@@ -278,11 +277,10 @@ void DragonClosestHit(inout HitInfo payload, Attributes attrib)
         float4 specularCalc = spec * lightArray[i].lightSpecularColour;
         
         // Multiplying shadows here instead of at the end looks nicer as it keeps the ambient value.
-        finalCol += (diffuseCalc + specularCalc) * softShadowMultiplier;
+        finalCol += (diffuseCalc + specularCalc) * softShadowMultiplier * attenuation;
     }
     
       
-    finalCol *= attenuation;
     
     // Calculate and apply reflection colour. TODO: Add some sort of value to tweak it. Maybe I could sample textures later too :D
     RayDesc ray;
@@ -325,7 +323,7 @@ void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
     
     float attenuation = 1.0f;
     
-    float softShadowMultiplier = AccumulateSoftShadowHits(shadowSampleCount, (float3) lightArray[0].lightPosition, lightArray[0].attenuationRadius, worldNormal, payload.recursionDepth);
+    float softShadowMultiplier = AccumulateSoftShadowHits(shadowSampleCount, (float3) lightArray[0].lightPosition, lightArray[1].attenuationRadius, worldNormal, payload.recursionDepth);
     float4 finalCol = float4(0, 0, 0, 0);
 
     for (int i = 0; i < 3; i++)
@@ -349,11 +347,10 @@ void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
         float4 specularCalc = spec * lightArray[i].lightSpecularColour;
         
         // Multiplying shadows here instead of at the end looks nicer as it keeps the ambient value.
-        finalCol += (diffuseCalc + specularCalc) * softShadowMultiplier;
+        finalCol += (diffuseCalc + specularCalc) * softShadowMultiplier * attenuation;
     }
     
       
-    finalCol *= attenuation;
     
     // Calculate and apply reflection colour. TODO: Add some sort of value to tweak it. Maybe I could sample textures later too :D
     RayDesc ray;

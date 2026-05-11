@@ -20,6 +20,8 @@ DXRRuntime::DXRRuntime(DXRApp* app)
 	m_ui = new ImGuiWrapper;
 }
 
+int m_currentLightIndex = 0;
+
 void DXRRuntime::Render()
 {
 	DXRContext* context = m_app->GetContext();
@@ -30,18 +32,8 @@ void DXRRuntime::Render()
 	ImGui::NewFrame();
 	//ImGui::ShowDemoWindow(); // Show demo window
 	bool resize = true;
-
 	m_ui->TransformPanel(*m_app->m_drawableObjects[m_currentObjIndex], m_currentObjIndex, m_app->m_drawableObjects.size());
-	m_ui->LightPanel(&m_app->m_lightVector[0]->m_ambientColour.x,
-		&m_app->m_lightVector[0]->m_diffuseColour.x,
-		&m_app->m_lightVector[0]->m_specularColour.x,
-		&m_app->m_lightVector[0]->m_shininess,
-		m_app->m_lightVector[0]->m_position,
-		&m_app->m_lightVector[0]->m_attenuationRadius);
-	m_ui->GPUDebugPanel(&m_app->m_shadowSampleCount,
-		&m_app->m_materialAlbedo,
-		&m_app->m_materialRoughness,
-		&m_app->m_materialMetalness);
+	m_ui->LightPanel(*m_app->m_lightVector[m_currentLightIndex], m_currentLightIndex, m_app->m_lightVector.size());
 
 	// Record all the commands we need to render the scene into the command list.
 	PopulateCommandList();

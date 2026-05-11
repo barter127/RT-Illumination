@@ -12,9 +12,9 @@ public:
 
 	void DrawVec3Control(std::string displayString, DirectX::XMFLOAT3& vector, int barWidth, int columnWidth, int resetTo);
 
-	void LightPanel(float* ambientCol, float* diffuseCol,
-		float* specularCol, float* specularPower,
-		DirectX::XMFLOAT4& lightDir, float* attenuation);
+	void SwitchIndex(int& index, int objCount);
+
+	void LightPanel(PointLight& point, int& lightIndex, int lightCount);
 
 	void GPUDebugPanel(int* shadowSampleCount, float* matAlbedo, float* matRoughness, float* matMetalness);
 };
