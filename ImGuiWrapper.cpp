@@ -137,7 +137,7 @@ void ImGuiWrapper::SwitchIndex(int& index, int objCount)
 	}
 }
 
-void ImGuiWrapper::LightPanel(BaseLight& point, int& lightIndex, int lightCount)
+void ImGuiWrapper::LightPanel(BaseLight& light, int& lightIndex, int lightCount)
 {
 	constexpr int resetToZero = 0;
 
@@ -151,24 +151,36 @@ void ImGuiWrapper::LightPanel(BaseLight& point, int& lightIndex, int lightCount)
 
 	SwitchIndex(lightIndex, lightCount);
 
-	ImGui::ColorEdit4("Ambient Colour", &point.m_ambientColour.x);
+	char* lightingType = "";
+	bool isPointLight = light.LightType() == LightTypes::Point;
+
+	if (isPointLight)
+		lightingType = "Point Light";
+	else
+		lightingType = "Directional Light";
+
+	ImGui::Text(lightingType);
+
+	ImGui::ColorEdit4("Ambient Colour", &light.m_ambientColour.x);
 
 	ImGui::NewLine();
 
-	ImGui::ColorEdit4("Diffuse Colour", &point.m_diffuseColour.x);
+	ImGui::ColorEdit4("Diffuse Colour", &light.m_diffuseColour.x);
 
 	ImGui::NewLine();
 
-	ImGui::ColorEdit4("Specular Colour", &point.m_specularColour.x);
-	ImGui::SliderFloat("Specular Power", &point.m_shininess, minSpecPower, maxSpecPower, "%.1f");
+	ImGui::ColorEdit4("Specular Colour", &light.m_specularColour.x);
+	ImGui::SliderFloat("Specular Power", &light.m_shininess, minSpecPower, maxSpecPower, "%.1f");
 
 	ImGui::NewLine();
-
-	XMFLOAT3 lightDir3 = XMFLOAT3(point.m_position.x, point.m_position.y, point.m_position.z);
+	XMFLOAT3 lightDir3 = XMFLOAT3(light.m_position.x, light.m_position.y, light.m_position.z);
 	DrawVec3Control("Direction", lightDir3, 75.0f, 60.0f,resetToZero);
-	point.m_position.x = lightDir3.x; point.m_position.y = lightDir3.y; point.m_position.z = lightDir3.z;
+	light.m_position.x = lightDir3.x; light.m_position.y = lightDir3.y; light.m_position.z = lightDir3.z;
 
-	ImGui::SliderFloat("Attenuation", &point.m_attenuationRadius, minAttenuation, maxAttenuation, "%.1f");
+	if (isPointLight)
+		ImGui::SliderFloat("Attenuation", &light.m_attenuationRadius, minAttenuation, maxAttenuation, "%.1f");
+	else
+		ImGui::NewLine(); // Empty line to not change shape of box.
 
 	ImGui::End();
 }

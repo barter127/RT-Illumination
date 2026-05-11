@@ -168,6 +168,7 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     {
         if (lightArray[i].type == DirectionalLightType)
             finalCol += DirectionalLight(lightArray[i], lightCount, worldNormal, shadowSampleCount, payload.recursionDepth);
+        
         else if (lightArray[i].type == PointLightType)
             finalCol += PointLight(lightArray[i], lightCount, worldNormal, shadowSampleCount, payload.recursionDepth);
     }
@@ -266,8 +267,6 @@ void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
         else if (lightArray[i].type == PointLightType)
             finalCol += PointLight(lightArray[i], lightCount, worldNormal, shadowSampleCount, payload.recursionDepth);
     }
-    
-  
     
     float4 sampe = g_bMetalMap.SampleLevel(g_sampler, triTexCoord, 0) + g_bNormal.SampleLevel(g_sampler, triTexCoord, 0);
     payload.colorAndDistance = finalCol;
