@@ -6,7 +6,7 @@
 static const float PI = 3.14159265f;
 
 float3 ImportanceSampleGGX(float2 Xi, float roughness, float3 normal);
-float3 G_Smith(float rougness, float NoV, float NoL);
+float G_Smith(float4 N, float4 V, float4 L, float roughness);
 float2 Hammersley(int bits, int numSamples);
 
 
@@ -57,11 +57,30 @@ float3 PrefilterEnvMap(float Roughness, float3 R)
 // NoL - normal dot light. the dot product between the product between the surface normal and light direction.
 // Essentially the letter o between two letters just represents the dot in dot product.
 
-// 
-float G_Smith(float rougness, float NoV, float NoL)
+// The geometry function. Higher roughness means there are more microfacets to shadow.
+// eg. light gets stuck in the microfacets and shadow the image.
+// https://learnopengl.com/PBR/Theory
+float GeometrySchlickGGX(float NdotV, float k)
 {
-    return 0.0f;
+    float nom = NdotV;
+
+    float denom = NdotV * (1.0 - k) + k;
+
+    return nom / denom;
+
 }
+
+float G_Smith(float4 N, float4 V, float4 L, float roughness)
+{
+    float NdotV = max(dot(N, V), 0.0);
+    float NdotL = max(dot(N, L), 0.0);
+
+    float ggx1 = GeometrySchlickGGX(NdotV, k);
+    float ggx2 = GeometrySchlickGGX(NdotL, k);
+
+    return ggx1 * ggx2;
+}
+
 
 
 // Hammersly generates 2D sample points but GGX turns those points into directions.
@@ -114,7 +133,7 @@ float2 IntegrateBRDF(float roughness, float NoV, float3 Normal)
         
         if (NoL > 0)
         {
-            float G = G_Smith(roughness, NoV, NoL);
+            float G = G_Smith(Normal, V, L, roughness);
             
             float G_Vis = G * VoH / (NoH * NoV);
             float Fc = pow(1 - VoH, 5);
@@ -127,6 +146,8 @@ float2 IntegrateBRDF(float roughness, float NoV, float3 Normal)
     return float2(A, B) / NumSamples;
 }
 
+// Use everything above to calculate the final specular colour.
+// This will be used to replace the specular colour we're currently using phong for.
 float3 ApproximateSpecularIBL(float3 pbrSpecularColour, float materialRoughness, float3 worldNormal, float3 viewDir)
 {
     float NoV = saturate(dot(worldNormal, viewDir));
