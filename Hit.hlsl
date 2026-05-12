@@ -1,6 +1,7 @@
 // #include "Common.hlsl"
 #include "Random.hlsl"
 #include "Light.hlsl"
+#include "BRDF.hlsl"
 
 #define MAX_RAY_RECURSION_DEPTH 8
 
@@ -230,21 +231,22 @@ void DragonClosestHit(inout HitInfo payload, Attributes attrib)
             finalCol += PointLight(lightArray[i], lightCount, worldNormal, shadowSampleCount, payload.recursionDepth);
     }
     
-    // Calculate and apply reflection colour. TODO: Add some sort of value to tweak it. Maybe I could sample textures later too :D
-    RayDesc ray;
-    ray.Origin = HitWorldPosition();
-    ray.Direction = reflect(WorldRayDirection(), worldNormal);
-    float4 reflectionColour = TraceRadianceRay(ray, payload.recursionDepth);
-    finalCol += reflectionColour;
+    float3 hitPos = HitWorldPosition();
+    float3 viewDir = normalize(WorldRayOrigin() - hitPos);
     
-    float4 baseColour;
+    float4 baseColour = float4(0,0,0,1);
     
     if (usePointSample)
         baseColour = g_dTexture.SampleLevel(g_samplerPoint, triTexCoord, 0);
     else
         baseColour = g_dTexture.SampleLevel(g_samplerLinear, triTexCoord, 0);
     
-    payload.colorAndDistance = finalCol * baseColour;
+    baseColour.rgb += ApproximateSpecularIBL((float3) lightArray[0].specularColour, materialRoughness,
+        worldNormal, viewDir, g_samplerLinear);
+    
+    float4 sampe = g_dMetalMap.SampleLevel(g_samplerPoint, triTexCoord, 0) + g_dNormal.SampleLevel(g_samplerPoint, triTexCoord, 0);
+    
+    payload.colorAndDistance = baseColour * finalCol;
 }
 
 [shader("closesthit")]

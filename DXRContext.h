@@ -31,8 +31,8 @@ class DXRContext
 	uint32_t m_debugBufferSize;
 
 	// == Texture ===
-	std::array<ComPtr<ID3D12Resource>, 6> m_texUploadHeapArray;
-	std::array<ComPtr<ID3D12Resource>, 6> m_texArray;
+	std::array<ComPtr<ID3D12Resource>, 7> m_texUploadHeapArray;
+	std::array<ComPtr<ID3D12Resource>, 7> m_texArray;
 	D3D12_RESOURCE_DESC m_textureDesc;
 
 	ComPtr<ID3D12DescriptorHeap> m_IMGUIDescHeap;

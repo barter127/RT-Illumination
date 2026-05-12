@@ -39,7 +39,7 @@ float4 PointLight(LightData lightData, int lightCount,float3 worldNormal ,int sh
         // Specular.
         float3 halfwayVector = normalize(lightDir + viewDir);
         float spec = pow(saturate(dot(worldNormal, halfwayVector)), lightData.shininess);
-        specularCalc = spec * lightData.specularColour;
+        // specularCalc = spec * lightData.specularColour;
     }
         
     float softShadowMultiplier = AccumulateSoftShadowHits(shadowSampleCount, (float3) lightData.position, lightData.attenuationRadius, worldNormal, recursionDepth);

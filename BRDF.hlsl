@@ -1,9 +1,13 @@
+#include "Common.hlsl"
+
 // This file is gonna be overcommented so the evil and hard BRDF logic sticks in my head.
 // Most of it came from here but I wanted to play around with it.
 // https://blog.selfshadow.com/publications/s2013-shading-course/karis/s2013_pbs_epic_notes_v2.pdf
 
 
 static const float PI = 3.14159265f;
+
+Texture2D<float4> g_envMap : register(t9);
 
 float3 ImportanceSampleGGX(float2 Xi, float roughness, float3 normal);
 float G_Smith(float4 N, float4 V, float4 L, float roughness);
@@ -30,10 +34,10 @@ float2 Hammersley(int bits, int numSamples)
 // In Unreal's code this func is used to sample the precomputed environment map.
 // It uses importance sampling to compute microfacet distrubtution based on viewing angle.
 // My implementation uses raytraces for each check so it's very expensive.
-float3 PrefilterEnvMap(float Roughness, float3 R)
+float3 PrefilterEnvMap(float Roughness, float3 viewDir, SamplerState usedSampler)
 {
-    float3 N = R;
-    float3 V = R;
+    float3 N = viewDir;
+    float3 V = viewDir;
     float3 PrefilteredColor = 0;
     float TotalWeight = 0.0f;
     const uint NumSamples = 1024;
@@ -45,8 +49,7 @@ float3 PrefilterEnvMap(float Roughness, float3 R)
         float NoL = saturate(dot(N, L));
         if (NoL > 0)
         {
-            // Replace this with a ray trace because I do not have an environment map.
-            PrefilteredColor += float4(0,0,0,0);
+            PrefilteredColor += g_envMap.SampleLevel(usedSampler, (float2)L, 0).rgb * NoL;
             TotalWeight += NoL;
         }
     }
@@ -70,13 +73,13 @@ float GeometrySchlickGGX(float NdotV, float k)
 
 }
 
-float G_Smith(float4 N, float4 V, float4 L, float roughness)
+float G_Smith(float3 N, float3 V, float3 L, float roughness)
 {
     float NdotV = max(dot(N, V), 0.0);
     float NdotL = max(dot(N, L), 0.0);
 
-    float ggx1 = GeometrySchlickGGX(NdotV, k);
-    float ggx2 = GeometrySchlickGGX(NdotL, k);
+    float ggx1 = GeometrySchlickGGX(NdotV, roughness);
+    float ggx2 = GeometrySchlickGGX(NdotL, roughness);
 
     return ggx1 * ggx2;
 }
@@ -125,7 +128,7 @@ float2 IntegrateBRDF(float roughness, float NoV, float3 Normal)
     {
         float2 Xi = Hammersley(i, NumSamples);
         float3 H = ImportanceSampleGGX(Xi, roughness, Normal);
-        float4 L = 2 * dot(V, H) * H - V;
+        float3 L = 2 * dot(V, H) * H - V;
         
         float NoL = saturate(L.z);
         float NoH = saturate(H.z);
@@ -148,13 +151,13 @@ float2 IntegrateBRDF(float roughness, float NoV, float3 Normal)
 
 // Use everything above to calculate the final specular colour.
 // This will be used to replace the specular colour we're currently using phong for.
-float3 ApproximateSpecularIBL(float3 pbrSpecularColour, float materialRoughness, float3 worldNormal, float3 viewDir)
+float3 ApproximateSpecularIBL(float3 pbrSpecularColour, float materialRoughness, float3 worldNormal, float3 viewDir, SamplerState usedSampler)
 {
     float NoV = saturate(dot(worldNormal, viewDir));
     float3 R = 2 * dot(viewDir, worldNormal) * worldNormal - viewDir;
     
-    float3 PrefilteredColour = float3(0, 0, 0);
+    float3 PrefilteredColour = PrefilterEnvMap(materialRoughness, viewDir, usedSampler);
     float2 EnvBRDF = IntegrateBRDF(materialRoughness, NoV, worldNormal);
     
-    return PrefilteredColour * (pbrSpecularColour * EnvBRDF.x + EnvBRDF.y);
+    return PrefilteredColour * (pbrSpecularColour);
 }

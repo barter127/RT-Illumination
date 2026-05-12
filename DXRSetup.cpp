@@ -338,6 +338,7 @@ void DXRSetup::LoadAssets()
 	LoadTextureFromPath(L"Models/Dragon/DefaultMaterial.png", context, 3);
 	LoadTextureFromPath(L"Models/Dragon/metalnessMap1.png", context, 4);
 	LoadTextureFromPath(L"Models/Dragon/normalMap1.png", context, 5);
+	LoadTextureFromPath(L"Models/dockEnvMap.png", context, 6);
 
 	// Create synchronization objects and wait until assets have been uploaded to
 	// the GPU.
@@ -452,12 +453,13 @@ ComPtr<ID3D12RootSignature> DXRSetup::CreateHitSignature() {
 	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_CBV, 1 /*b1*/); // Debug
 
 	rsc.AddHeapRangesParameter({ { 2 /*t2*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1 /*2nd slot of the heap (see CreateShaderResourceHeap() */ } }); /*Top-level acceleration structure*/
-	rsc.AddHeapRangesParameter({ { 3 /*t3*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3 /*4th slot of the heap (see CreateShaderResourceHeap() */ } }); /*Texture*/
-	rsc.AddHeapRangesParameter({ { 4 /*t4*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 4 /*5th slot of the heap (see CreateShaderResourceHeap() */ } }); /*Texture*/
-	rsc.AddHeapRangesParameter({ { 5 /*t5*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 5 /*6th slot of the heap (see CreateShaderResourceHeap() */ } }); /*Texture*/
-	rsc.AddHeapRangesParameter({ { 6 /*t5*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 6 /*7th slot of the heap (see CreateShaderResourceHeap() */ } }); /*Texture*/
-	rsc.AddHeapRangesParameter({ { 7 /*t5*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 7 /*8th slot of the heap (see CreateShaderResourceHeap() */ } }); /*Texture*/
-	rsc.AddHeapRangesParameter({ { 8 /*t5*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 8 /*9th slot of the heap (see CreateShaderResourceHeap() */ } }); /*Texture*/
+	rsc.AddHeapRangesParameter({ { 3 /*t3*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3 /*4th slot of the heap (see CreateShaderResourceHeap() */ } }); /*Base Col Bunny Texture*/
+	rsc.AddHeapRangesParameter({ { 4 /*t4*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 4 /*5th slot of the heap (see CreateShaderResourceHeap() */ } }); /*Metal Map Bunny Texture*/
+	rsc.AddHeapRangesParameter({ { 5 /*t5*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 5 /*6th slot of the heap (see CreateShaderResourceHeap() */ } }); /*Normal Map Bunny Texture*/
+	rsc.AddHeapRangesParameter({ { 6 /*t6*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 6 /*7th slot of the heap (see CreateShaderResourceHeap() */ } }); /*Base Col Dragon Texture*/
+	rsc.AddHeapRangesParameter({ { 7 /*t7*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 7 /*8th slot of the heap (see CreateShaderResourceHeap() */ } }); /*Metal Map Dragon Texture*/
+	rsc.AddHeapRangesParameter({ { 8 /*t8*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 8 /*9th slot of the heap (see CreateShaderResourceHeap() */ } }); /*Normal Map Dragon Texture*/
+	rsc.AddHeapRangesParameter({ { 9 /*t9*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 9 /*10th slot of the heap (see CreateShaderResourceHeap() */ } }); /*Env Map Texture*/
 
 	D3D12_STATIC_SAMPLER_DESC* samplers = new D3D12_STATIC_SAMPLER_DESC[2];
 		
@@ -639,7 +641,7 @@ void DXRSetup::CreateShaderResourceHeap()
 {
 	DXRContext* context = m_app->GetContext();
 
-	constexpr int numOfDescHeaps = 9;
+	constexpr int numOfDescHeaps = 10;
 
 	// Create a SRV/UAV/CBV descriptor heap. We need 2 entries - 1 UAV for the
 	// raytracing output and 1 SRV for the TLAS
@@ -699,6 +701,9 @@ void DXRSetup::CreateShaderResourceHeap()
 
 	srvHandle.ptr += m_device -> GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	CreateTextureUploadHeap(srvHandle, context, 5);
+
+	srvHandle.ptr += m_device -> GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	CreateTextureUploadHeap(srvHandle, context, 6);
 }
 
 //-----------------------------------------------------------------------------
@@ -749,6 +754,7 @@ void DXRSetup::CreateShaderBindingTable()
 			heapPointer,	
 			heapPointer,	
 			heapPointer,	
+			heapPointer,	
 			heapPointer
 		});
 
@@ -767,6 +773,7 @@ void DXRSetup::CreateShaderBindingTable()
 			heapPointer,
 			heapPointer,
 			heapPointer,
+			heapPointer,
 			heapPointer
 		});
 
@@ -778,6 +785,7 @@ void DXRSetup::CreateShaderBindingTable()
 			(void*)(m_app->m_drawableObjects[3]->getIndexBuffer()->GetGPUVirtualAddress()),
 			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress()),
 			(void*)(m_app->GetContext()->m_debugBuffer.Get()->GetGPUVirtualAddress()),
+			heapPointer,
 			heapPointer,
 			heapPointer,
 			heapPointer,

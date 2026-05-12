@@ -4,6 +4,8 @@
 // and that its size must be declared in the corresponding
 // D3D12_RAYTRACING_SHADER_CONFIG pipeline subobjet.
 
+#ifndef COMMONTYPES
+#define COMMONTYPES
 #define MAX_RAY_RECURSION_DEPTH 8
 
 struct HitInfo {
@@ -43,3 +45,4 @@ float3 HitWorldPosition()
 {
     return WorldRayOrigin() + RayTCurrent() * WorldRayDirection();
 }
+#endif
