@@ -194,7 +194,7 @@ void ImGuiWrapper::LightPanel(BaseLight& light, int& lightIndex, int lightCount)
 }
 
 void ImGuiWrapper::GPUDebugPanel(int* shadowSampleCount, float* matAlbedo, 
-	float* matRoughness, float* matMetalness, bool* usePointSample)
+	float* matRoughness, float* matMetalness, bool* usePointSample, float* glassColour)
 {
 	constexpr int minShadowSample = 1;
 	constexpr int maxShadowSample = 200; // I stalled the GPU like 6 times. Don't change this future Heather.
@@ -208,7 +208,7 @@ void ImGuiWrapper::GPUDebugPanel(int* shadowSampleCount, float* matAlbedo,
 	//ImGui::SliderFloat("Metalness", matMetalness, 0.0f, 1.0f);
 
 	ImGui::Checkbox("Use Point Sampling", usePointSample);
-
+	ImGui::ColorEdit4("GlassColour", glassColour);
 
 	ImGui::End();
 }

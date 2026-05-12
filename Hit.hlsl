@@ -32,6 +32,8 @@ cbuffer DebugParams : register(b1)
     float materialRoughness;
     float materialMetalness; // Unimplemented
     
+    float4 glassColour; // Kept here to reduce number of units needed.
+    
     bool usePointSample;
     float3 padding;
 };
@@ -173,7 +175,7 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     else
         baseColour = g_bTexture.SampleLevel(g_samplerLinear, triTexCoord, 0);
     
-    payload.colorAndDistance = finalCol * baseColour;
+    payload.colorAndDistance += finalCol * baseColour;
 }
 
 // Used to render Dragons. Fully lit with attmpt at PBR reflections using an Environment app see BRDF.hlsl.
@@ -207,7 +209,7 @@ void DragonClosestHit(inout HitInfo payload, Attributes attrib)
     
     float4 sampe = g_dMetalMap.SampleLevel(g_samplerPoint, triTexCoord, 0) + g_dNormal.SampleLevel(g_samplerPoint, triTexCoord, 0);
     
-    payload.colorAndDistance = baseColour * finalCol;
+    payload.colorAndDistance += baseColour * finalCol;
 }
 
 // Fully lit untextured cube. Mainly to showcase the soft shadowing.
@@ -227,11 +229,43 @@ void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
             finalCol += PointLight(lightArray[i], lightCount, worldNormal, shadowSampleCount, payload.recursionDepth);
     }
     
-    payload.colorAndDistance = finalCol;
+    payload.colorAndDistance += finalCol;
+
 }
 
 [shader("anyhit")]
 void ArmadilloAnyHit(inout HitInfo payload, Attributes attrib)
 {
-    payload.colorAndDistance = float4(1, 1, 1, 1);
+    payload.colorAndDistance = glassColour;
+    
+    float3 worldNormal = ComputeWorldNormals(BTriVertex, indices, attrib);
+    
+    if (payload.recursionDepth >= MAX_RAY_RECURSION_DEPTH)
+        AcceptHitAndEndSearch();
+    
+    // It's not letting my fire a ray from the anyhit shader RIP refraction ig.
+    
+    //RayDesc refractRay;
+    //refractRay.Origin = HitWorldPosition();
+    //refractRay.Direction = refract(WorldRayDirection(), worldNormal, 20);
+    
+    //refractRay.TMin = 0.01;
+    //refractRay.TMax = 100000; // Ensure ray isn't too large.
+    
+    //HitInfo refractPayload;
+    
+    //TraceRay(
+    //    SceneBVH, // AS
+    //    RAY_FLAG_NONE,
+    //    0xFF, // Instance mask.
+    //    0, // Hit shader offset.
+    //    0, // Geometry Stide.
+    //    0, // Index of miss shader.
+    //    refractRay, // Ray info.
+    //    refractPayload); // Payload.   
+    
+    
+    //payload.colorAndDistance += refractPayload.colorAndDistance;
+    AcceptHitAndEndSearch();
+
 }

@@ -39,7 +39,7 @@ private:
 	/// \param     vVertexBuffers : pair of buffer and vertex count
 	/// \return    AccelerationStructureBuffers for TLAS
 	AccelerationStructureBuffers CreateBottomLevelAS(std::vector<std::pair<ComPtr<ID3D12Resource>, uint32_t>> vVertexBuffers,
-		std::vector<std::pair<ComPtr<ID3D12Resource>, uint32_t>> vIndexBuffers);
+		std::vector<std::pair<ComPtr<ID3D12Resource>, uint32_t>> vIndexBuffers, bool isOpaque);
 
 
 	// #DXR

@@ -21,5 +21,5 @@ void Miss(inout HitInfo payload
     float3 colour2 = lerp(colour, purple, ramp);
     
     
-    payload.colorAndDistance = float4(colour2, 1);
+    payload.colorAndDistance += float4(colour2, 1);
 }

@@ -372,23 +372,23 @@ void DXRSetup::CreateAccelerationStructures()
 	// Build the bottom AS from the Triangle vertex buffer
 	AccelerationStructureBuffers bottomLevelBunny =
 		CreateBottomLevelAS({ {m_app->m_drawableObjects[0]->getVertexBuffer().Get(), m_app->m_drawableObjects[0]->getVertexCount()} }, 
-			{ {m_app->m_drawableObjects[0]->getIndexBuffer().Get(), m_app->m_drawableObjects[0]->getIndexCount()}});
+			{ {m_app->m_drawableObjects[0]->getIndexBuffer().Get(), m_app->m_drawableObjects[0]->getIndexCount()}}, true);
 
 	AccelerationStructureBuffers bottomLevelBunnyCpyBuffers =
 		CreateBottomLevelAS({ {m_app->m_drawableObjects[1]->getVertexBuffer().Get(), m_app->m_drawableObjects[1]->getVertexCount()} },
-			{ {m_app->m_drawableObjects[1]->getIndexBuffer().Get(), m_app->m_drawableObjects[1]->getIndexCount()} });
+			{ {m_app->m_drawableObjects[1]->getIndexBuffer().Get(), m_app->m_drawableObjects[1]->getIndexCount()} }, false);
 
 	AccelerationStructureBuffers bottomLevelPlaneBuffers =
 		CreateBottomLevelAS({ {m_app->m_drawableObjects[2]->getVertexBuffer().Get(), m_app->m_drawableObjects[2]->getVertexCount()} }, 
-			{ {m_app->m_drawableObjects[2]->getIndexBuffer().Get(), m_app->m_drawableObjects[2]->getIndexCount()}});
+			{ {m_app->m_drawableObjects[2]->getIndexBuffer().Get(), m_app->m_drawableObjects[2]->getIndexCount()}}, true);
 
 	AccelerationStructureBuffers bottomLevelDragonBuffers =
 		CreateBottomLevelAS({ {m_app->m_drawableObjects[3]->getVertexBuffer().Get(), m_app->m_drawableObjects[3]->getVertexCount()} }, 
-			{ {m_app->m_drawableObjects[3]->getIndexBuffer().Get(), m_app->m_drawableObjects[3]->getIndexCount()}});
+			{ {m_app->m_drawableObjects[3]->getIndexBuffer().Get(), m_app->m_drawableObjects[3]->getIndexCount()}}, true);
 
 	AccelerationStructureBuffers bottomLevelDragonBuffersCpy =
 		CreateBottomLevelAS({ {m_app->m_drawableObjects[4]->getVertexBuffer().Get(), m_app->m_drawableObjects[4]->getVertexCount()} }, 
-			{ {m_app->m_drawableObjects[4]->getIndexBuffer().Get(), m_app->m_drawableObjects[4]->getIndexCount()}});
+			{ {m_app->m_drawableObjects[4]->getIndexBuffer().Get(), m_app->m_drawableObjects[4]->getIndexCount()}}, true);
 
 	m_app->m_instances.push_back(std::make_pair(bottomLevelBunny.pResult, m_app->m_drawableObjects[0]->getTransform()));
 	m_app->m_instances.push_back(std::make_pair(bottomLevelBunnyCpyBuffers.pResult, m_app->m_drawableObjects[1]->getTransform()));
@@ -535,7 +535,7 @@ void DXRSetup::CreateRaytracingPipeline()
 	// using the [shader("xxx")] syntax
 	pipeline.AddLibrary(context->m_rayGenLibrary.Get(), { L"RayGen" });
 	pipeline.AddLibrary(context->m_missLibrary.Get(), { L"Miss"});
-	pipeline.AddLibrary(context->m_hitLibrary.Get(), { L"ClosestHit", L"DragonClosestHit", L"PlaneClosestHit"});
+	pipeline.AddLibrary(context->m_hitLibrary.Get(), { L"ClosestHit", L"DragonClosestHit", L"PlaneClosestHit", L"ArmadilloAnyHit"});
 	pipeline.AddLibrary(context->m_shadowLibrary.Get(), { L"ShadowMiss", L"ShadowClosestHit" });
 
 	// To be used, each DX12 shader needs a root signature defining which
@@ -564,6 +564,7 @@ void DXRSetup::CreateRaytracingPipeline()
 	pipeline.AddHitGroup(L"HitGroup", L"ClosestHit");
 	pipeline.AddHitGroup(L"DragonHitGroup", L"DragonClosestHit");
 	pipeline.AddHitGroup(L"PlaneHitGroup", L"PlaneClosestHit");
+	pipeline.AddHitGroup(L"ArmadilloHitGroup", L"", L"ArmadilloAnyHit");
 	pipeline.AddHitGroup(L"ShadowHitGroup", L"ShadowClosestHit");
 
 	// The following section associates the root signature to each shader. Note
@@ -573,7 +574,7 @@ void DXRSetup::CreateRaytracingPipeline()
 	// closest-hit shaders share the same root signature.
 	pipeline.AddRootSignatureAssociation(context->m_rayGenSignature.Get(), { L"RayGen" });
 	pipeline.AddRootSignatureAssociation(context->m_missSignature.Get(), { L"Miss" });
-	pipeline.AddRootSignatureAssociation(context->m_hitSignature.Get(), { L"HitGroup", L"DragonHitGroup", L"PlaneHitGroup" });
+	pipeline.AddRootSignatureAssociation(context->m_hitSignature.Get(), { L"HitGroup", L"DragonHitGroup", L"PlaneHitGroup", L"ArmadilloHitGroup"});
 
 	// The payload size defines the maximum size of the data carried by the rays,
 	// ie. the the data
@@ -798,6 +799,24 @@ void DXRSetup::CreateShaderBindingTable()
 	// Adding Shadow Hit Group.
 	context->m_sbtHelper.AddHitGroup(L"ShadowHitGroup", {});
 
+	context->m_sbtHelper.AddHitGroup(L"ArmadilloHitGroup",
+		{ (void*)(m_app->m_drawableObjects[1]->getVertexBuffer()->GetGPUVirtualAddress()),
+			(void*)(m_app->m_drawableObjects[1]->getIndexBuffer()->GetGPUVirtualAddress()),
+			(void*)(m_app->GetContext()->m_lightBuffer.Get()->GetGPUVirtualAddress()),
+			(void*)(m_app->GetContext()->m_debugBuffer.Get()->GetGPUVirtualAddress()),
+			heapPointer,
+			heapPointer,
+			heapPointer,
+			heapPointer,
+			heapPointer,
+			heapPointer,
+			heapPointer,
+			heapPointer
+		});
+
+	// Adding Shadow Hit Group.
+	context->m_sbtHelper.AddHitGroup(L"ShadowHitGroup", {});
+
 
 	// Compute the size of the SBT given the number of shaders and their
 	// parameters
@@ -940,7 +959,8 @@ void DXRSetup::CreateDebugBuffer()
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nv_helpers_dx12::kUploadHeapProps);
 
-	DebugBuffer db = { m_app->m_shadowSampleCount, m_app->m_materialAlbedo, m_app->m_materialRoughness, m_app->m_materialMetalness, m_app->m_usePointSampling};
+	DebugBuffer db = { m_app->m_shadowSampleCount, m_app->m_materialAlbedo, m_app->m_materialRoughness, m_app->m_materialMetalness, 
+		m_app->m_glassColour, m_app->m_usePointSampling};
 
 	// Copy data to cb.
 	uint8_t* pData;
@@ -953,7 +973,8 @@ void DXRSetup::UpdateDebugBuffer()
 {
 	DXRContext* context = m_app->GetContext();
 
-	DebugBuffer db = { m_app->m_shadowSampleCount, m_app->m_materialAlbedo, m_app->m_materialRoughness, m_app->m_materialMetalness, m_app->m_usePointSampling };
+	DebugBuffer db = { m_app->m_shadowSampleCount, m_app->m_materialAlbedo, m_app->m_materialRoughness, 
+		m_app->m_materialMetalness, m_app->m_glassColour ,m_app->m_usePointSampling };
 
 	// Copy data to cb.
 	uint8_t* pData;
@@ -1023,7 +1044,7 @@ void DXRSetup::CreateTextureUploadHeap(D3D12_CPU_DESCRIPTOR_HANDLE srvHandle, DX
 // buffers, and building the actual AS
 //
 AccelerationStructureBuffers DXRSetup::CreateBottomLevelAS(std::vector<std::pair<ComPtr<ID3D12Resource>, uint32_t>> vVertexBuffers,
-	std::vector<std::pair<ComPtr<ID3D12Resource>, uint32_t>> vIndexBuffers)
+	std::vector<std::pair<ComPtr<ID3D12Resource>, uint32_t>> vIndexBuffers, bool isOpaque)
 {
 	DXRContext* context = m_app->GetContext();
 	nv_helpers_dx12::BottomLevelASGenerator bottomLevelAS;
@@ -1037,7 +1058,7 @@ AccelerationStructureBuffers DXRSetup::CreateBottomLevelAS(std::vector<std::pair
 			bottomLevelAS.AddVertexBuffer(vVertexBuffers[i].first.Get(), 0,
 				vVertexBuffers[i].second, sizeof(Vertex),
 				vIndexBuffers[i].first.Get(), 0,
-				vIndexBuffers[i].second, nullptr, 0, true);
+				vIndexBuffers[i].second, nullptr, 0, isOpaque);
 		}
 		else
 		{
@@ -1104,7 +1125,7 @@ void DXRSetup::CreateTopLevelAS(
 			static_cast<UINT>(0));
 		context->m_topLevelASGenerator.AddInstance(instances[1].first.Get(),
 			instances[1].second, static_cast<UINT>(1),
-			static_cast<UINT>(0));
+			static_cast<UINT>(6));
 		context->m_topLevelASGenerator.AddInstance(instances[2].first.Get(),
 			instances[2].second, static_cast<UINT>(2),
 			static_cast<UINT>(2));

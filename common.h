@@ -46,6 +46,8 @@ struct DebugBuffer
 	float materialRoughness;
 	float materialMetalness;
 
+	XMFLOAT4 glassColour;
+
 	bool usePointSample;
 	XMFLOAT3 padding;
 };

@@ -76,6 +76,8 @@ private:
 	float m_materialRoughness;
 	float m_materialMetalness;
 
+	XMFLOAT4 m_glassColour;
+
 	bool m_usePointSampling = true;
 
 	static bool m_rMouseDown;
