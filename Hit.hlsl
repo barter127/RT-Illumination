@@ -243,6 +243,7 @@ void ArmadilloAnyHit(inout HitInfo payload, Attributes attrib)
     if (payload.recursionDepth >= MAX_RAY_RECURSION_DEPTH)
         AcceptHitAndEndSearch();
     
+    IgnoreHit();
     // It's not letting my fire a ray from the anyhit shader RIP refraction ig.
     
     //RayDesc refractRay;
@@ -266,6 +267,5 @@ void ArmadilloAnyHit(inout HitInfo payload, Attributes attrib)
     
     
     //payload.colorAndDistance += refractPayload.colorAndDistance;
-    AcceptHitAndEndSearch();
 
 }
