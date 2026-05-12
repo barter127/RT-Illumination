@@ -35,9 +35,9 @@ cbuffer LightBuffer : register(b0)
 cbuffer DebugParams : register(b1)
 {
     int shadowSampleCount;
-    float materialAlbedo;
+    float materialAlbedo; // Unimplemented.
     float materialRoughness;
-    float materialMetalness;
+    float materialMetalness; // Unimplemented
     
     bool usePointSample;
     float3 padding;

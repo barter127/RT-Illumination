@@ -203,9 +203,9 @@ void ImGuiWrapper::GPUDebugPanel(int* shadowSampleCount, float* matAlbedo,
 	ImGui::Begin("GPU Debug");
 
 	ImGui::SliderInt("Shadow Sample Count", shadowSampleCount, minShadowSample, maxShadowSample);
-	ImGui::SliderFloat("Albedo", matAlbedo, 0.0f, 1.0f);
+	// ImGui::SliderFloat("Albedo", matAlbedo, 0.0f, 1.0f);
 	ImGui::SliderFloat("Roughness", matRoughness, 0.0f, 1.0f);
-	ImGui::SliderFloat("Metalness", matMetalness, 0.0f, 1.0f);
+	//ImGui::SliderFloat("Metalness", matMetalness, 0.0f, 1.0f);
 
 	ImGui::Checkbox("Use Point Sampling", usePointSample);
 
