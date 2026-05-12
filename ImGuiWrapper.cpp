@@ -152,12 +152,20 @@ void ImGuiWrapper::LightPanel(BaseLight& light, int& lightIndex, int lightCount)
 	SwitchIndex(lightIndex, lightCount);
 
 	char* lightingType = "";
+	char* dirOrPos = "";
 	bool isPointLight = light.LightType() == LightTypes::Point;
 
 	if (isPointLight)
-		lightingType = "Point Light";
+	{
+		lightingType = "Type: Point Light";
+		dirOrPos = "Position";
+	}
 	else
-		lightingType = "Directional Light";
+	{
+		lightingType = "Type: Directional Light";
+		dirOrPos = "Direction";
+	}
+
 
 	ImGui::Text(lightingType);
 
@@ -174,7 +182,7 @@ void ImGuiWrapper::LightPanel(BaseLight& light, int& lightIndex, int lightCount)
 
 	ImGui::NewLine();
 	XMFLOAT3 lightDir3 = XMFLOAT3(light.m_position.x, light.m_position.y, light.m_position.z);
-	DrawVec3Control("Direction", lightDir3, 75.0f, 60.0f,resetToZero);
+	DrawVec3Control(dirOrPos, lightDir3, 75.0f, 60.0f,resetToZero);
 	light.m_position.x = lightDir3.x; light.m_position.y = lightDir3.y; light.m_position.z = lightDir3.z;
 
 	if (isPointLight)

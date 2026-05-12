@@ -225,9 +225,6 @@ void DragonClosestHit(inout HitInfo payload, Attributes attrib)
     ray.Origin = HitWorldPosition();
     ray.Direction = reflect(WorldRayDirection(), worldNormal);
     float4 reflectionColour = TraceRadianceRay(ray, payload.recursionDepth);
-    
-    // === Accumulate all light data.
-    
     finalCol += reflectionColour;
     
     float4 sampe = g_dMetalMap.SampleLevel(g_sampler, triTexCoord, 0) + g_dNormal.SampleLevel(g_sampler, triTexCoord, 0);
