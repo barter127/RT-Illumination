@@ -33,7 +33,7 @@ void DXRRuntime::Render()
 	bool resize = true;
 	m_ui->TransformPanel(*m_app->m_drawableObjects[m_currentObjIndex], m_currentObjIndex, m_app->m_drawableObjects.size());
 	m_ui->LightPanel(*m_app->m_lightVector[m_currentLightIndex], m_currentLightIndex, m_app->m_lightVector.size());
-	m_ui->GPUDebugPanel(&m_app->m_shadowSampleCount, &m_app->m_materialAlbedo, &m_app->m_materialRoughness, &m_app->m_materialMetalness);
+	m_ui->GPUDebugPanel(&m_app->m_shadowSampleCount, &m_app->m_materialAlbedo, &m_app->m_materialRoughness, &m_app->m_materialMetalness, &m_app->m_usePointSampling);
 
 	// Record all the commands we need to render the scene into the command list.
 	PopulateCommandList();

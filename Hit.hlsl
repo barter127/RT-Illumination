@@ -22,7 +22,8 @@ Texture2D<float4> g_dTexture : register(t6);
 Texture2D<float4> g_dMetalMap : register(t7);
 Texture2D<float4> g_dNormal : register(t8);
 
-SamplerState g_sampler : register(s0);
+SamplerState g_samplerPoint : register(s0);
+SamplerState g_samplerLinear : register(s1);
 
 static const int lightCount = 4;
 cbuffer LightBuffer : register(b0)
@@ -36,6 +37,9 @@ cbuffer DebugParams : register(b1)
     float materialAlbedo;
     float materialRoughness;
     float materialMetalness;
+    
+    bool usePointSample;
+    float3 padding;
 };
 
 float3 SampleSphere(float3 center, float radius)
@@ -183,8 +187,14 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     
     finalCol += reflectionColour;
     
-    float4 sampe = g_bMetalMap.SampleLevel(g_sampler, triTexCoord, 0) + g_bNormal.SampleLevel(g_sampler, triTexCoord, 0);
-    payload.colorAndDistance = finalCol * g_bTexture.SampleLevel(g_sampler, triTexCoord, 0);
+    float4 baseColour;
+    
+    if (usePointSample)
+        baseColour = g_bTexture.SampleLevel(g_samplerPoint, triTexCoord, 0);
+    else
+        baseColour = g_bTexture.SampleLevel(g_samplerLinear, triTexCoord, 0);
+    
+    payload.colorAndDistance = finalCol * baseColour;
 }
 
 [shader("closesthit")]
@@ -227,8 +237,14 @@ void DragonClosestHit(inout HitInfo payload, Attributes attrib)
     float4 reflectionColour = TraceRadianceRay(ray, payload.recursionDepth);
     finalCol += reflectionColour;
     
-    float4 sampe = g_dMetalMap.SampleLevel(g_sampler, triTexCoord, 0) + g_dNormal.SampleLevel(g_sampler, triTexCoord, 0);
-    payload.colorAndDistance = finalCol * g_dTexture.SampleLevel(g_sampler, triTexCoord, 0);
+    float4 baseColour;
+    
+    if (usePointSample)
+        baseColour = g_dTexture.SampleLevel(g_samplerPoint, triTexCoord, 0);
+    else
+        baseColour = g_dTexture.SampleLevel(g_samplerLinear, triTexCoord, 0);
+    
+    payload.colorAndDistance = finalCol * baseColour;
 }
 
 [shader("closesthit")]
@@ -265,6 +281,7 @@ void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
             finalCol += PointLight(lightArray[i], lightCount, worldNormal, shadowSampleCount, payload.recursionDepth);
     }
     
-    float4 sampe = g_bMetalMap.SampleLevel(g_sampler, triTexCoord, 0) + g_bNormal.SampleLevel(g_sampler, triTexCoord, 0);
+    SamplerState usedSampler = usePointSample ? g_samplerPoint : g_samplerLinear;
+    float4 sampe = g_bMetalMap.SampleLevel(usedSampler, triTexCoord, 0) + g_bNormal.SampleLevel(usedSampler, triTexCoord, 0);
     payload.colorAndDistance = finalCol;
 }

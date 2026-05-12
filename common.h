@@ -45,4 +45,7 @@ struct DebugBuffer
 	float materialAlbedo;
 	float materialRoughness;
 	float materialMetalness;
+
+	bool usePointSample;
+	XMFLOAT3 padding;
 };

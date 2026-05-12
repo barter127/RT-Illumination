@@ -76,6 +76,8 @@ private:
 	float m_materialRoughness;
 	float m_materialMetalness;
 
+	bool m_usePointSampling = true;
+
 	static bool m_rMouseDown;
 	static bool m_lMouseDown;
 

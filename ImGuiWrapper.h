@@ -18,6 +18,6 @@ public:
 
 	void LightPanel(BaseLight& point, int& lightIndex, int lightCount);
 
-	void GPUDebugPanel(int* shadowSampleCount, float* matAlbedo, float* matRoughness, float* matMetalness);
+	void GPUDebugPanel(int* shadowSampleCount, float* matAlbedo, float* matRoughness, float* matMetalness, bool* usePointSample);
 };
 

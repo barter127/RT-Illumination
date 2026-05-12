@@ -459,22 +459,39 @@ ComPtr<ID3D12RootSignature> DXRSetup::CreateHitSignature() {
 	rsc.AddHeapRangesParameter({ { 7 /*t5*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 7 /*8th slot of the heap (see CreateShaderResourceHeap() */ } }); /*Texture*/
 	rsc.AddHeapRangesParameter({ { 8 /*t5*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 8 /*9th slot of the heap (see CreateShaderResourceHeap() */ } }); /*Texture*/
 
-	D3D12_STATIC_SAMPLER_DESC sampler = {};
-	sampler.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT;
-	sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	sampler.MipLODBias = 0;
-	sampler.MaxAnisotropy = 0;
-	sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-	sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
-	sampler.MinLOD = 0.0f;
-	sampler.MaxLOD = D3D12_FLOAT32_MAX;
-	sampler.ShaderRegister = 0;
-	sampler.RegisterSpace = 0;
-	sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+	D3D12_STATIC_SAMPLER_DESC* samplers = new D3D12_STATIC_SAMPLER_DESC[2];
+		
+	samplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplers[0].Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT;
+	samplers[0].MipLODBias = 0;
+	samplers[0].MaxAnisotropy = 0;
+	samplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+	samplers[0].BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+	samplers[0].MinLOD = 0.0f;
+	samplers[0].MaxLOD = D3D12_FLOAT32_MAX;
+	samplers[0].ShaderRegister = 0;
+	samplers[0].RegisterSpace = 0;
+	samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
-	return rsc.Generate(m_device.Get(), true, 1, &sampler);
+
+
+	samplers[1].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplers[1].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplers[1].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplers[1].Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
+	samplers[1].MipLODBias = 0;
+	samplers[1].MaxAnisotropy = 0;
+	samplers[1].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+	samplers[1].BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+	samplers[1].MinLOD = 0.0f;
+	samplers[1].MaxLOD = D3D12_FLOAT32_MAX;
+	samplers[1].ShaderRegister = 1;
+	samplers[1].RegisterSpace = 0;
+	samplers[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+	return rsc.Generate(m_device.Get(), true, 2, samplers);
 }
 
 //-----------------------------------------------------------------------------
@@ -915,7 +932,7 @@ void DXRSetup::CreateDebugBuffer()
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nv_helpers_dx12::kUploadHeapProps);
 
-	DebugBuffer db = { m_app->m_shadowSampleCount, m_app->m_materialAlbedo, m_app->m_materialRoughness, m_app->m_materialMetalness};
+	DebugBuffer db = { m_app->m_shadowSampleCount, m_app->m_materialAlbedo, m_app->m_materialRoughness, m_app->m_materialMetalness, m_app->m_usePointSampling};
 
 	// Copy data to cb.
 	uint8_t* pData;
@@ -928,7 +945,7 @@ void DXRSetup::UpdateDebugBuffer()
 {
 	DXRContext* context = m_app->GetContext();
 
-	DebugBuffer db = { m_app->m_shadowSampleCount, m_app->m_materialAlbedo, m_app->m_materialRoughness, m_app->m_materialMetalness};
+	DebugBuffer db = { m_app->m_shadowSampleCount, m_app->m_materialAlbedo, m_app->m_materialRoughness, m_app->m_materialMetalness, m_app->m_usePointSampling };
 
 	// Copy data to cb.
 	uint8_t* pData;
