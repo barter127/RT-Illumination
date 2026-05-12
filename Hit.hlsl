@@ -5,13 +5,6 @@
 
 #define MAX_RAY_RECURSION_DEPTH 8
 
-struct STriVertex
-{ // IMPORTANT - the c++ version of this is 'Vertex' found in the common.h file
-    float3 vertex;
-    float4 normal;
-    float2 texcoord;
-};
-
 StructuredBuffer<STriVertex> BTriVertex : register(t0);
 StructuredBuffer<int> indices : register(t1);
 RaytracingAccelerationStructure SceneBVH : register(t2);
@@ -144,29 +137,14 @@ float4 TraceRadianceRay(in RayDesc ray, in uint currentRayRecursionDepth)
     return reflectPayload.colorAndDistance;
 }
 
+
+// Used to render bunnies. Fully lit with perfect reflections. (no roughness).
 [shader("closesthit")]
 void ClosestHit(inout HitInfo payload, Attributes attrib)
-{
-    uint vertID = 3 * PrimitiveIndex();
+{   
+    float2 triTexCoord = ComputeWorldUVs(BTriVertex, indices, attrib);
     
-    float2 vertexUV[3];
-    vertexUV[0] = BTriVertex[indices[vertID + 0]].texcoord.xy;
-    vertexUV[1] = BTriVertex[indices[vertID + 1]].texcoord.xy;
-    vertexUV[2] = BTriVertex[indices[vertID + 2]].texcoord.xy;
-    
-    vertexUV[0].y *= -1;
-    vertexUV[1].y *= -1;
-    vertexUV[2].y *= -1;
-    
-    float3 vertexNormals[3];
-    vertexNormals[0] = BTriVertex[indices[vertID + 0]].normal.xyz;
-    vertexNormals[1] = BTriVertex[indices[vertID + 1]].normal.xyz;
-    vertexNormals[2] = BTriVertex[indices[vertID + 2]].normal.xyz;
-    
-    float2 triTexCoord = HitAttributeFloat2(vertexUV, attrib);
-    
-    float3 triNormal = HitAttributeFloat3(vertexNormals, attrib);
-    float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
+    float3 worldNormal = ComputeWorldNormals(BTriVertex, indices, attrib);
     
     float4 finalCol = float4(0, 0, 0, 0);
     for (int i = 0; i < lightCount; i++)
@@ -198,29 +176,12 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     payload.colorAndDistance = finalCol * baseColour;
 }
 
+// Used to render Dragons. Fully lit with attmpt at PBR reflections using an Environment app see BRDF.hlsl.
 [shader("closesthit")]
 void DragonClosestHit(inout HitInfo payload, Attributes attrib)
 {
-    uint vertID = 3 * PrimitiveIndex();
-    
-    float2 vertexUV[3];
-    vertexUV[0] = BTriVertex[indices[vertID + 0]].texcoord.xy;
-    vertexUV[1] = BTriVertex[indices[vertID + 1]].texcoord.xy;
-    vertexUV[2] = BTriVertex[indices[vertID + 2]].texcoord.xy;
-    
-    vertexUV[0].y *= -1;
-    vertexUV[1].y *= -1;
-    vertexUV[2].y *= -1;
-    
-    float3 vertexNormals[3];
-    vertexNormals[0] = BTriVertex[indices[vertID + 0]].normal.xyz;
-    vertexNormals[1] = BTriVertex[indices[vertID + 1]].normal.xyz;
-    vertexNormals[2] = BTriVertex[indices[vertID + 2]].normal.xyz;
-    
-    float2 triTexCoord = HitAttributeFloat2(vertexUV, attrib);
-    
-    float3 triNormal = HitAttributeFloat3(vertexNormals, attrib);
-    float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
+    float2 triTexCoord = ComputeWorldUVs(BTriVertex, indices, attrib);
+    float3 worldNormal = ComputeWorldNormals(BTriVertex, indices, attrib);
     
     float4 finalCol = float4(0, 0, 0, 0);
     for (int i = 0; i < lightCount; i++)
@@ -249,29 +210,12 @@ void DragonClosestHit(inout HitInfo payload, Attributes attrib)
     payload.colorAndDistance = baseColour * finalCol;
 }
 
+// Fully lit untextured cube. Mainly to showcase the soft shadowing.
 [shader("closesthit")]
 void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
 {
-    uint vertID = 3 * PrimitiveIndex();
-    
-    float2 vertexUV[3];
-    vertexUV[0] = BTriVertex[indices[vertID + 0]].texcoord.xy;
-    vertexUV[1] = BTriVertex[indices[vertID + 1]].texcoord.xy;
-    vertexUV[2] = BTriVertex[indices[vertID + 2]].texcoord.xy;
-    
-    vertexUV[0].y *= -1;
-    vertexUV[1].y *= -1;
-    vertexUV[2].y *= -1;
-    
-    float3 vertexNormals[3];
-    vertexNormals[0] = BTriVertex[indices[vertID + 0]].normal.xyz;
-    vertexNormals[1] = BTriVertex[indices[vertID + 1]].normal.xyz;
-    vertexNormals[2] = BTriVertex[indices[vertID + 2]].normal.xyz;
-    
-    float2 triTexCoord = HitAttributeFloat2(vertexUV, attrib);
-    
-    float3 triNormal = HitAttributeFloat3(vertexNormals, attrib);
-    float3 worldNormal = normalize(mul(triNormal, (float3x3) ObjectToWorld4x3()));
+    float2 triTexCoord = ComputeWorldUVs(BTriVertex, indices, attrib);
+    float3 worldNormal = ComputeWorldNormals(BTriVertex, indices, attrib);
     
     float4 finalCol = float4(0, 0, 0, 0);
     for (int i = 0; i < lightCount; i++)
@@ -283,7 +227,11 @@ void PlaneClosestHit(inout HitInfo payload, Attributes attrib)
             finalCol += PointLight(lightArray[i], lightCount, worldNormal, shadowSampleCount, payload.recursionDepth);
     }
     
-    SamplerState usedSampler = usePointSample ? g_samplerPoint : g_samplerLinear;
-    float4 sampe = g_bMetalMap.SampleLevel(usedSampler, triTexCoord, 0) + g_bNormal.SampleLevel(usedSampler, triTexCoord, 0);
     payload.colorAndDistance = finalCol;
+}
+
+[shader("anyhit")]
+void ArmadilloAnyHit(inout HitInfo payload, Attributes attrib)
+{
+    payload.colorAndDistance = float4(1, 1, 1, 1);
 }
